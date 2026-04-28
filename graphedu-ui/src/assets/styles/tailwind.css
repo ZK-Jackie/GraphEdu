@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+/* dark mode config */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 主题色映射 — 通过 CSS 变量实现角色切换 */
+@theme {
+  --color-primary: var(--ge-primary);
+  --color-primary-hover: var(--ge-primary-hover);
+  --color-primary-active: var(--ge-primary-active);
+  --color-primary-focus: var(--ge-primary-focus);
+  --color-primary-light: var(--ge-primary-light);
+  --color-primary-disabled: var(--ge-primary-disabled);
+}
+
+/* https://juejin.cn/post/7574451949325991977 */
+@layer base {
+  svg {
+    display: initial;
+    vertical-align: initial;
+  }
+}

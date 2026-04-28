@@ -1,0 +1,312 @@
+<template>
+  <TablePageLayout>
+    <!-- 搜索表单 -->
+    <template #search>
+      <a-card :bordered="false">
+        <a-form layout="inline" :model="queryParams">
+          {% for column in columns if column.query == '1' and column.pythonField not in ['createTime', 'updateTime'] %}
+          {% if column.htmlType == 'input' or column.htmlType == 'textarea' %}
+          <a-form-item :label="$t('{{ moduleName }}.{{ businessName }}.{{ column.pythonField }}')">
+            <a-input
+              v-model:value="queryParams.{{ column.pythonField }}"
+              :placeholder="$t('common.pleaseInput') + $t('{{ moduleName }}.{{ businessName }}.{{ column.pythonField }}')"
+              allow-clear
+              style="width: 200px"
+              @press-enter="handleQuery"
+            />
+          </a-form-item>
+          {% elif column.htmlType == 'select' or column.htmlType == 'radio' %}
+          <a-form-item :label="$t('{{ moduleName }}.{{ businessName }}.{{ column.pythonField }}')">
+            <DictSelect
+              v-model:model-value="queryParams.{{ column.pythonField }}"
+              dict-type="{{ column.dictType }}"
+              :placeholder="$t('common.pleaseSelect') + $t('{{ moduleName }}.{{ businessName }}.{{ column.pythonField }}')"
+              allow-clear
+              style="width: 150px"
+            />
+          </a-form-item>
+          {% elif column.htmlType == 'datetime' %}
+          <a-form-item :label="$t('{{ moduleName }}.{{ businessName }}.{{ column.pythonField }}')">
+            <a-range-picker
+              v-model:value="{{ column.pythonField }}Range"
+              :placeholder="[$t('{{ moduleName }}.{{ businessName }}.startDate'), $t('{{ moduleName }}.{{ businessName }}.endDate')]"
+              format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              style="width: 380px"
+            />
+          </a-form-item>
+          {% endif %}
+          {% endfor %}
+          <a-form-item>
+            <a-space>
+              <a-button type="primary" @click="handleQuery">
+                <template #icon><SearchOutlined /></template>
+                {{ $t('common.search') }}
+              </a-button>
+              <a-button @click="resetQuery">
+                <template #icon><ReloadOutlined /></template>
+                {{ $t('common.reset') }}
+              </a-button>
+            </a-space>
+          </a-form-item>
+        </a-form>
+      </a-card>
+    </template>
+
+    <!-- 操作按钮 -->
+    <template #actions>
+      <a-space>
+        <a-button type="primary" @click="handleAdd">
+          <template #icon><PlusOutlined /></template>
+          {{ $t('{{ moduleName }}.{{ businessName }}.add') }}
+        </a-button>
+        <a-button type="default" danger :disabled="multiple" @click="handleDelete">
+          <template #icon><DeleteOutlined /></template>
+          {{ $t('common.delete') }}
+        </a-button>
+        <a-button type="default" @click="handleExport">
+          <template #icon><DownloadOutlined /></template>
+          {{ $t('common.export') }}
+        </a-button>
+      </a-space>
+    </template>
+
+    <!-- {{ functionName }}表格 -->
+    <template #table>
+      <a-table
+        :columns="columns"
+        :data-source="{{ className }}List"
+        :loading="loading"
+        :row-selection="rowSelection"
+        :pagination="false"
+        row-key="{{ pkColumn.pythonField }}"
+      >
+        <template #bodyCell="{ column, record }">
+          {% for column in columns if column.list == '1' %}
+          {% if column.dictType %}
+          <!-- {{ column.columnComment }}列 -->
+          <template v-if="column.key === '{{ column.pythonField }}'">
+            <DictTag :options="{{ column.dictType }}" :value="record.{{ column.pythonField }}" />
+          </template>
+          {% elif column.pythonType == 'datetime' %}
+          <!-- {{ column.columnComment }}列 -->
+          <template v-else-if="column.key === '{{ column.pythonField }}'">
+            {{ '{ ' }}formatTime(record.{{ column.pythonField }}){{ '}' }}
+          </template>
+          {% endif %}
+          {% endfor %}
+          <!-- 操作列 -->
+          <template v-else-if="column.key === 'action'">
+            <a-space>
+              <a-button type="link" size="small" @click="handleUpdate(record)">
+                <template #icon><EditOutlined /></template>
+                {{ $t('common.edit') }}
+              </a-button>
+              <a-button type="link" size="small" danger @click="handleDelete(record)">
+                <template #icon><DeleteOutlined /></template>
+                {{ $t('common.delete') }}
+              </a-button>
+            </a-space>
+          </template>
+        </template>
+      </a-table>
+    </template>
+
+    <!-- 分页 -->
+    <template #pagination>
+      <a-pagination
+        v-model:current="queryParams.page"
+        v-model:page-size="queryParams.size"
+        :total="total"
+        :show-size-changer="true"
+        :show-total="(total_: number) => `${{ '{ ' }}$t('common.total'){{ '}' }} ${total_} {{$t('common.items')}}`"
+        @change="handlePageChange"
+      />
+    </template>
+  </TablePageLayout>
+
+  <!-- {{ functionName }}表单弹窗 -->
+  <{{ ClassName }}Form
+    v-model:visible="formVisible"
+    :{{ pkColumn.pythonField }}="current{{ pkColumn.pythonField | to_pascal }}"
+    @success="handleFormSuccess"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { message, Modal } from 'ant-design-vue'
+import { SearchOutlined, ReloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+import type { TableProps } from 'ant-design-vue'
+import { get{{ ClassName }}List, delete{{ ClassName }} } from '@/api/system/{{ businessName }}'
+import type { {{ ClassName }}QueryDTO, {{ ClassName }}ListVO } from '@/types/api/{{ businessName }}'
+import { useDict } from '@/utils/dict'
+import DictTag from '@/components/dict/DictTag.vue'
+import DictSelect from '@/components/dict/DictSelect.vue'
+import TablePageLayout from '@/layout/TablePageLayout.vue'
+import {{ ClassName }}Form from './components/{{ ClassName }}Form.vue'
+
+const { t } = useI18n()
+
+// 获取字典数据
+{% for column in columns if column.dictType %}
+const {{ column.dictType }} = useDict('{{ column.dictType }}').{{ column.dictType }}
+{% endfor %}
+
+// 表格列定义
+const columns = [
+  {% for column in columns if column.list == '1' %}
+  { title: t('{{ moduleName }}.{{ businessName }}.{{ column.pythonField }}'), dataIndex: '{{ column.pythonField }}', key: '{{ column.pythonField }}', width: {{ column.listWidth or 150 }}{% if column.pythonType == 'str' %}, ellipsis: true{% endif %} },
+  {% endfor %}
+  { title: t('common.operation'), key: 'action', fixed: 'right', width: 180 },
+]
+
+// 数据状态
+const loading = ref(false)
+const {{ className }}List = ref<{{ ClassName }}ListVO[]>([])
+const total = ref(0)
+
+// 查询参数
+const queryParams = reactive<{{ ClassName }}QueryDTO>({
+  page: 1,
+  size: 10,
+  {% for column in columns if column.query == '1' and column.pythonField not in ['createTime', 'updateTime'] %}
+  {{ column.pythonField }}: undefined,
+  {% endfor %}
+})
+
+{% for column in columns if column.query == '1' and column.htmlType == 'datetime' %}
+// 日期范围
+const {{ column.pythonField }}Range = ref<[string, string] | null>(null)
+{% endfor %}
+
+// 选中的行
+const selectedRowKeys = ref<{% if pkColumn.pythonType == 'int' %}number{% elif pkColumn.pythonType == 'str' %}string{% else %}{{ pkColumn.pythonType }}{% endif %}[]>([])
+const selectedRows = ref<{{ ClassName }}ListVO[]>([])
+const multiple = computed(() => selectedRowKeys.value.length === 0)
+
+// 行选择配置
+const rowSelection: TableProps['rowSelection'] = {
+  selectedRowKeys: selectedRowKeys,
+  onChange: (keys, rows) => {
+    selectedRowKeys.value = keys as {% if pkColumn.pythonType == 'int' %}number{% elif pkColumn.pythonType == 'str' %}string{% else %}{{ pkColumn.pythonType }}{% endif %}[]
+    selectedRows.value = rows as {{ ClassName }}ListVO[]
+  },
+}
+
+// 弹窗状态
+const formVisible = ref(false)
+const current{{ pkColumn.pythonField | to_pascal }} = ref<{% if pkColumn.pythonType == 'int' %}number{% elif pkColumn.pythonType == 'str' %}string{% elif pkColumn.pythonType == 'datetime' %}string{% else %}{{ pkColumn.pythonType }}{% endif %}>()
+
+// 获取{{ functionName }}列表
+const getList = async () => {
+  loading.value = true
+  {% for column in columns if column.query == '1' and column.htmlType == 'datetime' %}
+  // 处理{{ column.columnComment }}范围
+  if ({{ column.pythonField }}Range.value?.length === 2) {
+    queryParams.{{ column.pythonField }}Start = {{ column.pythonField }}Range.value[0]
+    queryParams.{{ column.pythonField }}End = {{ column.pythonField }}Range.value[1]
+  } else {
+    queryParams.{{ column.pythonField }}Start = undefined
+    queryParams.{{ column.pythonField }}End = undefined
+  }
+  {% endfor %}
+
+  try {
+    const res = await get{{ ClassName }}List(queryParams)
+    if (res.code === 200) {
+      {{ className }}List.value = res.data.rows || []
+      total.value = res.data.total || 0
+    }
+  } catch (_e) {
+    message.error(t('{{ moduleName }}.{{ businessName }}.getListFailed'))
+  } finally {
+    loading.value = false
+  }
+}
+
+// 格式化时间
+const formatTime = (time: string) => {
+  if (!time) return ''
+  return time
+}
+
+// 搜索
+const handleQuery = () => {
+  queryParams.page = 1
+  getList()
+}
+
+// 重置查询
+const resetQuery = () => {
+  {% for column in columns if column.query == '1' and column.pythonField not in ['createTime', 'updateTime'] %}
+  queryParams.{{ column.pythonField }} = undefined,
+  {% endfor %}
+  {% for column in columns if column.query == '1' and column.htmlType == 'datetime' %}
+  {{ column.pythonField }}Range.value = null
+  queryParams.{{ column.pythonField }}Start = undefined
+  queryParams.{{ column.pythonField }}End = undefined
+  {% endfor %}
+  queryParams.page = 1
+  getList()
+}
+
+// 分页变化
+const handlePageChange = () => {
+  getList()
+}
+
+// 新增
+const handleAdd = () => {
+  current{{ pkColumn.pythonField | to_pascal }}.value = undefined
+  formVisible.value = true
+}
+
+// 修改
+const handleUpdate = (record: {{ ClassName }}ListVO) => {
+  current{{ pkColumn.pythonField | to_pascal }}.value = record.{{ pkColumn.pythonField }}
+  formVisible.value = true
+}
+
+// 删除
+const handleDelete = (record?: {{ ClassName }}ListVO) => {
+  const {{ pkColumn.pythonField }}s = record ? String(record.{{ pkColumn.pythonField }}) : selectedRowKeys.value.join(',')
+  const firstDisplayField = '{% for column in columns if column.list == '1' and column.pythonField not in ['id', 'createTime', 'updateTime'] %}{{ column.pythonField }}{% break %}{% endfor %}'
+  const content = record
+    ? t('{{ moduleName }}.{{ businessName }}.deleteConfirm', { name: record[firstDisplayField] })
+    : t('{{ moduleName }}.{{ businessName }}.deleteSelectedConfirm', { count: selectedRowKeys.value.length })
+
+  Modal.confirm({
+    title: t('common.systemTip'),
+    content,
+    onOk: async () => {
+      try {
+        const res = await delete{{ ClassName }}({{ pkColumn.pythonField }}s)
+        if (res.code === 200) {
+          message.success(t('common.deleteSuccess'))
+          await getList()
+        }
+      } catch (_e) {
+        message.error(t('common.deleteFailed'))
+      }
+    },
+  })
+}
+
+// 导出
+const handleExport = () => {
+  message.info(t('{{ moduleName }}.{{ businessName }}.exportInDevelopment'))
+}
+
+// 表单提交成功
+const handleFormSuccess = () => {
+  formVisible.value = false
+  getList()
+}
+
+// 初始化
+onMounted(() => {
+  getList()
+})
+</script>

@@ -1,0 +1,110 @@
+# Ruff 配置示例
+# 将此配置复制到项目根目录的 pyproject.toml 中
+
+[tool.ruff]
+# 目标 Python 版本
+target-version = "py311"
+
+# 每行最大字符数
+line-length = 88
+
+# 使用的源代码目录
+src = ["graphedu", "tests"]
+
+# 排除的目录
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.lint]
+# 启用的规则集
+# F - Pyflakes
+# E - pycodestyle errors
+# W - pycodestyle warnings
+# I - isort
+# N - pep8-naming
+# UP - pyupgrade
+# B - flake8-bugbear
+# C4 - flake8-comprehensions
+# SIM - flake8-simplify
+select = [
+    "F",
+    "E",
+    "W",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "C4",
+    "SIM",
+]
+
+# 忽略的规则
+ignore = [
+    # 允许使用未使用的导入（某些情况下需要）
+    "F401",
+    # 允许使用魔术值（在配置文件中很常见）
+    "PLR2004",
+    # 允许使用 TODO 注释
+    "TD001",
+    "TD002",
+    "TD003",
+]
+
+# 每个文件允许的未使用导入数
+unfixable = []
+
+# 允许自动修复的规则
+fixable = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试文件的特殊规则
+"tests/**/*.py" = [
+    "S101",  # 允许使用 assert
+    "ARG",   # 允许未使用的参数
+]
+
+# __init__.py 文件
+"__init__.py" = [
+    "F401",  # 允许未使用的导入（用于导出）
+]
+
+[tool.ruff.lint.isort]
+# isort 配置
+known-first-party = ["graphedu"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.ruff.lint.pycodestyle]
+# 每个文档字符串的最大空行数
+max-doc-length = 88
+
+[tool.ruff.lint.pydocstyle]
+# 文档字符串约定
+convention = "google"
+
+[tool.ruff.format]
+# 格式化配置
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

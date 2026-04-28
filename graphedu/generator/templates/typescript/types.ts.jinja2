@@ -1,0 +1,84 @@
+/**
+ * {{ functionName }}管理相关类型定义
+ * 对应后端：graphedu/common/models/dto/{{ businessName }}.py 和 vo/{{ businessName }}.py
+ * 生成时间: {{ datetime }}
+ * 生成作者: {{ author }}
+ */
+
+// ============================================================================
+// 请求 DTO 类型
+// ============================================================================
+
+/**
+ * {{ functionName }}查询请求
+ */
+export interface {{ ClassName }}QueryDTO {
+  {% for column in columns if column.query == '1' %}
+  /** {{ column.columnComment }}{% if column.queryType == 'LIKE' %}（模糊查询）{% endif %} */
+  {{ column.pythonField }}{% if column.pythonType == 'str' %}?: string{% elif column.pythonType == 'int' %}?: number{% elif column.pythonType == 'datetime' %}?: string{% elif column.pythonType == 'bool' %}?: boolean{% else %}?: {{ column.pythonType }}{% endif %}
+  {% endfor %}
+  /** 页码 */
+  page?: number
+  /** 每页数量 */
+  size?: number
+}
+
+/**
+ * 创建{{ functionName }}请求
+ */
+export interface {{ ClassName }}CreateDTO {
+  {% for column in columns if column.isInsert == '1' and column.pythonField not in ['createTime', 'updateTime'] %}
+  /** {{ column.columnComment }} */
+  {{ column.pythonField }}{% if column.isRequired == '1' %}: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% else %}?: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% endif %}
+  {% endfor %}
+}
+
+/**
+ * 更新{{ functionName }}请求
+ */
+export interface {{ ClassName }}UpdateDTO {
+  {% for column in columns if column.isEdit == '1' %}
+  /** {{ column.columnComment }} */
+  {{ column.pythonField }}{% if column.isRequired == '1' %}: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% else %}?: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% endif %}
+  {% endfor %}
+}
+
+// ============================================================================
+// 响应 VO 类型
+// ============================================================================
+
+/**
+ * {{ functionName }}列表项
+ */
+export interface {{ ClassName }}ListVO {
+  {% for column in columns if column.list == '1' %}
+  /** {{ column.columnComment }} */
+  {{ column.pythonField }}{% if column.isRequired == '1' %}: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% else %}?: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% endif %}
+  {% endfor %}
+}
+
+/**
+ * {{ functionName }}详细信息
+ */
+export interface {{ ClassName }}DetailVO {
+  {% for column in columns if column.pythonField not in ['createTime', 'updateTime'] or column.list == '1' %}
+  /** {{ column.columnComment }} */
+  {{ column.pythonField }}{% if column.isRequired == '1' %}: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% else %}?: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% endif %}
+  {% endfor %}
+}
+
+{% if tplCategory == 'tree' %}
+/**
+ * {{ functionName }}树节点
+ */
+export interface {{ ClassName }}TreeVO {
+  {% for column in columns %}
+  /** {{ column.columnComment }} */
+  {{ column.pythonField }}{% if column.isRequired == '1' %}: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% else %}?: {% if column.pythonType == 'str' %}string{% elif column.pythonType == 'int' %}number{% elif column.pythonType == 'datetime' %}string{% elif column.pythonType == 'bool' %}boolean{% else %}{{ column.pythonType }}{% endif %}{% endif %}
+  {% endfor %}
+  /** 是否有子节点 */
+  hasChildren?: boolean
+  /** 子节点列表 */
+  children?: {{ ClassName }}TreeVO[]
+}
+{% endif %}

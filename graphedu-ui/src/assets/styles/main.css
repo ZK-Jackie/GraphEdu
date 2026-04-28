@@ -1,0 +1,55 @@
+@import './themes/variables.css';
+@import './tailwind.css';
+
+/* Golden Layout 基础样式 */
+@import './goldenlayout-base.css';
+@import './goldenlayout-dark.css';
+
+/* 全局滚动条样式 - 灰色长方形 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0); /* 背景透明 */
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(144, 147, 153, 0.5);
+  border-radius: 0;
+  border: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(144, 147, 153, 0.8);
+}
+
+/* Firefox 滚动条样式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(144, 147, 153, 0.5) transparent;
+}
+
+/* 移除所有可能的边框和圆角 */
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-corner {
+  background: transparent;
+  border: none;
+}
+
+/* ---------- 暗色模式全局卡片边框 ---------- */
+html.dark .ant-card {
+  border: 1px solid var(--ge-border-color);
+}
+
+/* pdfjs TextLayer 用于字体度量的隐藏 canvas，必须隐藏避免占位 */
+.hiddenCanvasElement {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  display: none;
+}

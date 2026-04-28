@@ -1,0 +1,41 @@
+{
+  "{{ moduleName }}": {
+    "{{ businessName }}": {
+      "title": "{{ functionName }}管理",
+      "add": "新增{{ functionName }}",
+      "edit": "修改{{ functionName }}",
+      "delete": "删除{{ functionName }}",
+      "addChild": "新增子{{ functionName }}",
+      "export": "导出{{ functionName }}",
+      "getListFailed": "获取{{ functionName }}列表失败",
+      "deleteConfirm": "是否确认删除名称为\"{name}\"的数据项？",
+      "deleteSelectedConfirm": "是否确认删除选中的 {count} 条数据项？",
+      "exportInDevelopment": "导出功能开发中",
+      {% if tplCategory == 'tree' %}
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      {% else %}
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      {% endif %}
+      {% for column in columns if column.query == '1' or column.list == '1' %}
+      "{{ column.pythonField }}": "{{ column.columnComment }}",
+      {% endfor %}
+      {% for column in columns if column.query == '1' and column.htmlType == 'datetime' %}
+      "{{ column.pythonField }}Start": "{{ column.columnComment }}开始时间",
+      "{{ column.pythonField }}End": "{{ column.columnComment }}结束时间",
+      {% endfor %}
+      {% for column in columns if column.query == '1' %}
+      "{{ column.pythonField }}Placeholder": "请输入{{ column.columnComment }}",
+      {% endfor %}
+      {% for column in columns if column.query == '1' and (column.htmlType == 'select' or column.htmlType == 'radio') %}
+      "{{ column.pythonField }}Select": "请选择{{ column.columnComment }}",
+      {% endfor %}
+      "addSuccess": "新增{{ functionName }}成功",
+      "updateSuccess": "修改{{ functionName }}成功",
+      "deleteSuccess": "删除{{ functionName }}成功",
+      "addFailed": "新增{{ functionName }}失败",
+      "updateFailed": "修改{{ functionName }}失败"
+    }
+  }
+}

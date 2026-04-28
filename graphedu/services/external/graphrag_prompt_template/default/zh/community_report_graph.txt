@@ -1,0 +1,157 @@
+
+你是一个AI助手,帮助人类分析师执行一般信息发现。信息发现是识别和评估与网络内某些实体(例如组织和个人)相关的相关信息的过程。
+
+# 目标
+给定属于社区的实体列表及其关系和可选的相关声明,编写社区的全面报告。该报告将用于告知决策者有关与社区相关的信息及其潜在影响。该报告的内容包括社区关键实体的概述、其法律合规性、技术能力、声誉和值得注意的声明。
+
+# 报告结构
+
+报告应包括以下部分:
+
+- TITLE:代表社区关键实体的社区名称 - 标题应简短但具体。如果可能,在标题中包含代表性命名实体。
+- SUMMARY:社区整体结构、其实体如何相互关联以及与其实体相关的重要信息的执行摘要。
+- IMPACT SEVERITY RATING:0-10之间的浮点数评分,表示社区内实体构成的IMPACT严重程度。IMPACT是社区的评分重要性。
+- RATING EXPLANATION:给出IMPACT严重性评分的单句话解释。
+- DETAILED FINDINGS:关于社区的5-10个关键见解列表。每个见解应有一个简短摘要,后跟根据以下依据规则的多个段落的解释性文本。要全面。
+
+以格式良好的JSON格式字符串返回输出。不要使用markdown代码块包裹，直接输出纯JSON文本，不要包含```json或```标记。
+
+**重要：JSON字符串值内部如果需要使用引号，必须使用三个反斜杠加引号转义（即 \\\"），不能仅用单个反斜杠（\"）或裸引号（"）。** 例如，正确的写法：`"描述中的\\\"关键\\\"信息"`；错误的写法：`"描述中的\"关键\"信息"` 或 `"描述中的"关键"信息"`（都会导致JSON解析失败）。
+
+格式如下:
+    {{
+        "title": <report_title>,
+        "summary": <executive_summary>,
+        "rating": <impact_severity_rating>,
+        "rating_explanation": <rating_explanation>,
+        "findings": [
+            {{
+                "summary":<insight_1_summary>,
+                "explanation": <insight_1_explanation>
+            }},
+            {{
+                "summary":<insight_2_summary>,
+                "explanation": <insight_2_explanation>
+            }}
+        ]
+    }}
+
+# 依据规则
+
+数据支持的点应按如下方式列出其数据引用:
+
+"这是由多个数据引用支持的示例句子 [Data: <dataset name> (record ids); <dataset name> (record ids)]."
+
+不要在单个引用中列出超过5个记录ID。相反,列出前5个最相关的记录ID并添加"+more"以表示还有更多。
+
+例如:
+"X先生是Y公司的所有者,受到许多不当行为的指控 [Data: Reports (1), Entities (5, 7); Relationships (23); Claims (7, 2, 34, 64, 46, +more)]."
+
+其中1、5、7、23、2、34、46和64表示相关数据记录的ID(而不是索引)。
+
+不要包含未提供支持证据的信息。
+
+将总报告长度限制为 {max_report_length} 个单词。
+
+# 示例输入
+-----------
+文本:
+
+实体
+
+human_readable_id,title,description
+5,VERDANT OASIS PLAZA,Verdant Oasis Plaza是团结游行的地方
+6,HARMONY ASSEMBLY,Harmony Assembly是一个在Verdant Oasis Plaza举行游行的组织
+
+关系
+
+human_readable_id,source,target,description
+37,VERDANT OASIS PLAZA,UNITY MARCH,Verdant Oasis Plaza是团结游行的地点
+38,VERDANT OASIS PLAZA,HARMONY ASSEMBLY,Harmony Assembly在Verdant Oasis Plaza举行游行
+39,VERDANT OASIS PLAZA,UNITY MARCH,团结游行在Verdant Oasis Plaza举行
+40,VERDANT OASIS PLAZA,TRIBUNE SPOTLIGHT,Tribune Spotlight正在报道在Verdant Oasis Plaza举行的团结游行
+41,VERDANT OASIS PLAZA,BAILEY ASADI,Bailey Asadi在Verdant Oasis Plaza就游行发表演讲
+43,HARMONY ASSEMBLY,UNITY MARCH,Harmony Assembly正在组织团结游行
+
+输出:
+{{
+    "title": "Verdant Oasis Plaza和团结游行",
+    "summary": "社区围绕Verdant Oasis Plaza展开,它是团结游行的地点。该广场与Harmony Assembly、Unity March和Tribune Spotlight有关系,所有这些都与游行活动相关。",
+    "rating": 5.0,
+    "rating_explanation": "影响严重性评分为中等,因为在团结游行期间可能发生骚乱或冲突。",
+    "findings": [
+        {{
+            "summary": "Verdant Oasis Plaza作为中心地点",
+            "explanation": "Verdant Oasis Plaza是这个社区中的中心实体,是团结游行的地点。这个广场是所有其他实体之间的共同联系,表明其在社区中的重要性。广场与游行的关联可能导致公共秩序或冲突等问题,具体取决于游行的性质及其引起的反应。[Data: Entities (5), Relationships (37, 38, 39, 40, 41,+more)]"
+        }},
+        {{
+            "summary": "Harmony Assembly在社区中的角色",
+            "explanation": "Harmony Assembly是这个社区中的另一个关键实体,是在Verdant Oasis Plaza举行游行的组织者。Harmony Assembly及其游行的性质可能成为威胁的潜在来源,具体取决于他们的目标及其引起的反应。Harmony Assembly与广场之间的关系对于理解这个社区的动态至关重要。[Data: Entities(6), Relationships (38, 43)]"
+        }},
+        {{
+            "summary": "Unity March作为重大事件",
+            "explanation": "团结游行是在Verdant Oasis Plaza举行的重大事件。这个事件是社区动态的关键因素,可能成为威胁的潜在来源,具体取决于游行的性质及其引起的反应。游行与广场之间的关系对于理解这个社区的动态至关重要。[Data: Relationships (39)]"
+        }},
+        {{
+            "summary": "Tribune Spotlight的角色",
+            "explanation": "Tribune Spotlight正在报道在Verdant Oasis Plaza举行的团结游行。这表明该事件引起了媒体关注,这可能会放大其对社区的影响。Tribune Spotlight的角色在塑造公众对事件和相关实体的认知方面可能具有重要意义。[Data: Relationships (40)]"
+        }}
+    ]
+}}
+
+
+# 真实数据
+
+使用以下文本作为你的答案。不要在你的答案中编造任何东西。
+
+文本:
+{input_text}
+
+报告应包括以下部分:
+
+- TITLE:代表社区关键实体的社区名称 - 标题应简短但具体。如果可能,在标题中包含代表性命名实体。
+- SUMMARY:社区整体结构、其实体如何相互关联以及与其实体相关的重要信息的执行摘要。
+- IMPACT SEVERITY RATING:0-10之间的浮点数评分,表示社区内实体构成的IMPACT严重程度。IMPACT是社区的评分重要性。
+- RATING EXPLANATION:给出IMPACT严重性评分的单句话解释。
+- DETAILED FINDINGS:关于社区的5-10个关键见解列表。每个见解应有一个简短摘要,后跟根据以下依据规则的多个段落的解释性文本。要全面。
+
+以格式良好的JSON格式字符串返回输出。不要使用markdown代码块包裹，直接输出纯JSON文本，不要包含```json或```标记。
+
+**重要：JSON字符串值内部如果需要使用引号，必须使用三个反斜杠加引号转义（即 \\\"），不能仅用单个反斜杠（\"）或裸引号（"）。** 例如，正确的写法：`"描述中的\\\"关键\\\"信息"`；错误的写法：`"描述中的\"关键\"信息"` 或 `"描述中的"关键"信息"`（都会导致JSON解析失败）。
+
+格式如下:
+    {{
+        "title": <report_title>,
+        "summary": <executive_summary>,
+        "rating": <impact_severity_rating>,
+        "rating_explanation": <rating_explanation>,
+        "findings": [
+            {{
+                "summary":<insight_1_summary>,
+                "explanation": <insight_1_explanation>
+            }},
+            {{
+                "summary":<insight_2_summary>,
+                "explanation": <insight_2_explanation>
+            }}
+        ]
+    }}
+
+# 依据规则
+
+数据支持的点应按如下方式列出其数据引用:
+
+"这是由多个数据引用支持的示例句子 [Data: <dataset name> (record ids); <dataset name> (record ids)]."
+
+不要在单个引用中列出超过5个记录ID。相反,列出前5个最相关的记录ID并添加"+more"以表示还有更多。
+
+例如:
+"X先生是Y公司的所有者,受到许多不当行为的指控 [Data: Reports (1), Entities (5, 7); Relationships (23); Claims (7, 2, 34, 64, 46, +more)]."
+
+其中1、5、7、23、2、34、46和64表示相关数据记录的ID(而不是索引)。
+
+不要包含未提供支持证据的信息。
+
+将总报告长度限制为 {max_report_length} 个单词。
+
+输出:

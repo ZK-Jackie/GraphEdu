@@ -1,0 +1,822 @@
+/* Modern Pytest HTML Report Styles */
+
+:root {
+    /* Color Palette */
+    --primary-color: #6366f1;
+    --primary-dark: #4f46e5;
+    --success-color: #10b981;
+    --success-light: #d1fae5;
+    --failure-color: #ef4444;
+    --failure-light: #fee2e2;
+    --skipped-color: #f59e0b;
+    --skipped-light: #fef3c7;
+    --error-color: #dc2626;
+    --error-light: #fecaca;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-light: #9ca3af;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --border-color: #e5e7eb;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 50%, #faf5ff 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+/* Container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--bg-primary);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header p {
+    font-size: 1rem;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+/* Summary Section */
+.summary {
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary__info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary__card {
+    background: var(--bg-primary);
+    padding: 1.25rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.summary__card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.summary__card-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.summary__card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summary__card-value--passed {
+    color: var(--success-color);
+}
+
+.summary__card-value--failed {
+    color: var(--failure-color);
+}
+
+.summary__card-value--skipped {
+    color: var(--skipped-color);
+}
+
+.summary__card-value--duration {
+    color: var(--primary-color);
+}
+
+/* Progress Bar */
+.progress-bar {
+    width: 100%;
+    height: 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+}
+
+.progress-bar__segment {
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.progress-bar__segment--passed {
+    background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+}
+
+.progress-bar__segment--failed {
+    background: linear-gradient(135deg, var(--failure-color) 0%, #dc2626 100%);
+}
+
+.progress-bar__segment--skipped {
+    background: linear-gradient(135deg, var(--skipped-color) 0%, #d97706 100%);
+}
+
+/* Results Table */
+.results {
+    padding: 2rem;
+}
+
+.results__header {
+    margin-bottom: 2rem;
+}
+
+.results__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.results__title::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius-sm);
+}
+
+/* Filters Container */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.875rem;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Filter Checkbox Input */
+.filter,
+.results__filter {
+    position: relative;
+    display: none !important;
+}
+
+/* Filter Label/Text */
+.filters span {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--bg-primary);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Custom Checkbox Indicator */
+.filters span::before {
+    content: "";
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Checkmark */
+.filters span::after {
+    content: "";
+    position: absolute;
+    left: 0.875rem;
+    width: 0.375rem;
+    height: 0.625rem;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.2s ease;
+    opacity: 0;
+}
+
+/* Status-specific colors */
+.filters span.failed::before {
+    border-color: var(--failure-color);
+}
+
+.filters span.passed::before {
+    border-color: var(--success-color);
+}
+
+.filters span.skipped::before {
+    border-color: var(--skipped-color);
+}
+
+.filters span.xfailed::before,
+.filters span.error::before {
+    border-color: var(--error-color);
+}
+
+.filters span.xpassed::before,
+.filters span.rerun::before,
+.filters span.retried::before {
+    border-color: var(--primary-color);
+}
+
+/* Checkbox + Label Checked State */
+input[type="checkbox"]:checked + span {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.05);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Status-specific checked states */
+input[type="checkbox"]:checked + span.failed {
+    border-color: var(--failure-color);
+    background: var(--failure-light);
+    color: #991b1b;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+input[type="checkbox"]:checked + span.passed {
+    border-color: var(--success-color);
+    background: var(--success-light);
+    color: #065f46;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+input[type="checkbox"]:checked + span.skipped {
+    border-color: var(--skipped-color);
+    background: var(--skipped-light);
+    color: #92400e;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+input[type="checkbox"]:checked + span.xfailed,
+input[type="checkbox"]:checked + span.error {
+    border-color: var(--error-color);
+    background: var(--error-light);
+    color: #7f1d1d;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+input[type="checkbox"]:checked + span.xpassed,
+input[type="checkbox"]:checked + span.rerun,
+input[type="checkbox"]:checked + span.retried {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Checked checkbox indicator */
+input[type="checkbox"]:checked + span::before {
+    background: currentColor;
+    border-color: currentColor;
+}
+
+input[type="checkbox"]:checked + span::after {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+}
+
+/* Disabled state */
+input[type="checkbox"]:disabled + span {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+input[type="checkbox"]:disabled:checked + span {
+    opacity: 0.6;
+}
+
+/* Hover effects */
+input[type="checkbox"]:not(:disabled):not(:checked) + span:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+input[type="checkbox"]:not(:disabled):not(:checked) + span.failed:hover {
+    border-color: var(--failure-color);
+    color: var(--failure-color);
+}
+
+input[type="checkbox"]:not(:disabled):not(:checked) + span.passed:hover {
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+input[type="checkbox"]:not(:disabled):not(:checked) + span.skipped:hover {
+    border-color: var(--skipped-color);
+    color: var(--skipped-color);
+}
+
+/* Filter counters - highlight numbers */
+.filters span {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Zero counts styling */
+.filters span:empty::after {
+    content: "0";
+}
+
+/* Table Styles */
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-primary);
+}
+
+thead {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.01);
+    box-shadow: var(--shadow-md);
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+td {
+    padding: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Test Result Badge */
+.result-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.result-badge--passed {
+    background: var(--success-light);
+    color: #065f46;
+}
+
+.result-badge--failed {
+    background: var(--failure-light);
+    color: #991b1b;
+}
+
+.result-badge--skipped {
+    background: var(--skipped-light);
+    color: #92400e;
+}
+
+.result-badge--error {
+    background: var(--error-light);
+    color: #7f1d1d;
+}
+
+/* Test Name Link */
+.test-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.test-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* Duration */
+.duration {
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.duration--slow {
+    color: var(--failure-color);
+    font-weight: 600;
+}
+
+.duration--medium {
+    color: var(--skipped-color);
+}
+
+/* Error Messages */
+.error-message {
+    background: var(--failure-light);
+    border-left: 4px solid var(--failure-color);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-top: 0.5rem;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.8125rem;
+    color: #7f1d1d;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.error-message::-webkit-scrollbar {
+    width: 8px;
+}
+
+.error-message::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.error-message::-webkit-scrollbar-thumb {
+    background: var(--failure-color);
+    border-radius: var(--radius-md);
+}
+
+/* Collapsible Details */
+details {
+    margin-top: 0.5rem;
+}
+
+summary {
+    cursor: pointer;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+summary:hover {
+    background: var(--bg-tertiary);
+}
+
+summary::-webkit-details-marker {
+    display: none;
+}
+
+summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.details-content {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    margin-top: 0.5rem;
+}
+
+/* Screenshots and Media */
+.media-container {
+    margin-top: 1rem;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.media-container img,
+.media-container video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Log Output */
+.log-output {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.8125rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 0.5rem;
+}
+
+.log-output::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-output::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+.log-output::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: var(--radius-md);
+}
+
+/* Footer */
+.footer {
+    background: var(--bg-secondary);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem 0.5rem;
+    }
+
+    .header {
+        padding: 1.5rem 1rem;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .summary,
+    .results {
+        padding: 1rem;
+    }
+
+    .summary__info {
+        grid-template-columns: 1fr;
+    }
+
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.875rem 1rem;
+    }
+
+    .filters span {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .filters span::before {
+        width: 0.875rem;
+        height: 0.875rem;
+    }
+
+    .filters span::after {
+        left: 0.75rem;
+        width: 0.3125rem;
+        height: 0.5rem;
+    }
+
+    th, td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8125rem;
+    }
+
+    /* Hide less important columns on mobile */
+    th:nth-child(4),
+    td:nth-child(4) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .filters {
+        gap: 0.375rem;
+    }
+
+    .filters span {
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+    }
+
+    /* On very small screens, keep checkbox and count, reduce text */
+    .filters span {
+        justify-content: flex-start;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .container {
+        box-shadow: none;
+    }
+
+    .filters {
+        display: none;
+    }
+
+    .error-message {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .log-output {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.font-mono {
+    font-family: "Monaco", "Menlo", monospace;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.empty-state__icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state__text {
+    font-size: 1.125rem;
+    font-weight: 500;
+}
+
+/* Loading State */
+.loading {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0.75rem;
+    background: #1f2937;
+    color: white;
+    font-size: 0.75rem;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+}

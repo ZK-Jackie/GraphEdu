@@ -1,0 +1,41 @@
+{
+  "{{ moduleName }}": {
+    "{{ businessName }}": {
+      "title": "{{ functionName }} Management",
+      "add": "Add {{ functionName }}",
+      "edit": "Edit {{ functionName }}",
+      "delete": "Delete {{ functionName }}",
+      "addChild": "Add Child {{ functionName }}",
+      "export": "Export {{ functionName }}",
+      "getListFailed": "Failed to get {{ functionName }} list",
+      "deleteConfirm": "Are you sure you want to delete \"{name}\"?",
+      "deleteSelectedConfirm": "Are you sure you want to delete selected {count} items?",
+      "exportInDevelopment": "Export feature is under development",
+      {% if tplCategory == 'tree' %}
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      {% else %}
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      {% endif %}
+      {% for column in columns if column.query == '1' or column.list == '1' %}
+      "{{ column.pythonField }}": "{{ column.columnComment }}",
+      {% endfor %}
+      {% for column in columns if column.query == '1' and column.htmlType == 'datetime' %}
+      "{{ column.pythonField }}Start": "{{ column.columnComment }} Start Time",
+      "{{ column.pythonField }}End": "{{ column.columnComment }} End Time",
+      {% endfor %}
+      {% for column in columns if column.query == '1' %}
+      "{{ column.pythonField }}Placeholder": "Please enter {{ column.columnComment }}",
+      {% endfor %}
+      {% for column in columns if column.query == '1' and (column.htmlType == 'select' or column.htmlType == 'radio') %}
+      "{{ column.pythonField }}Select": "Please select {{ column.columnComment }}",
+      {% endfor %}
+      "addSuccess": "{{ functionName }} added successfully",
+      "updateSuccess": "{{ functionName }} updated successfully",
+      "deleteSuccess": "{{ functionName }} deleted successfully",
+      "addFailed": "Failed to add {{ functionName }}",
+      "updateFailed": "Failed to update {{ functionName }}"
+    }
+  }
+}

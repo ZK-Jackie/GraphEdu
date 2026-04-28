@@ -1,0 +1,22 @@
+{
+  "title": "账号设置",
+  "language": {
+    "label": "界面语言",
+    "zh": "中文",
+    "en": "English"
+  },
+  "timezone": {
+    "label": "时区设置"
+  },
+  "timeFormat": {
+    "label": "时间格式",
+    "preview": "预览"
+  },
+  "relativeTime": {
+    "label": "相对时间",
+    "help": "启用后将显示\"3分钟前\"等相对时间，超过7天显示完整时间"
+  },
+  "save": "保存",
+  "saveSuccess": "设置保存成功",
+  "resetSuccess": "设置已重置"
+}

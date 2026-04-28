@@ -1,0 +1,120 @@
+/**
+ * {{ functionName }}管理相关 API
+ * 对应后端：graphedu/api/services/system/{{ businessName }}.py
+ * 生成时间: {{ datetime }}
+ * 生成作者: {{ author }}
+ */
+import request from '@/utils/request'
+import type { ResponseType, Empty, PageResponse } from '@/types/api/common.ts'
+import type {
+  {{ ClassName }}QueryDTO,
+  {{ ClassName }}CreateDTO,
+  {{ ClassName }}UpdateDTO,
+  {{ ClassName }}ListVO,
+  {{ ClassName }}DetailVO,
+  {% if tplCategory == 'tree' %}
+  {{ ClassName }}TreeVO,
+  {% endif %}
+} from '@/types/api/{{ businessName }}'
+
+// ============== {{ functionName }}管理接口 ==============
+
+{% if tplCategory == 'tree' %}
+/**
+ * 获取{{ functionName }}列表（分页）
+ * GET /{{ moduleName }}/{{ businessName }}/list
+ */
+export function get{{ ClassName }}List(query: {{ ClassName }}QueryDTO): Promise<ResponseType<PageResponse<{{ ClassName }}ListVO>>> {
+  return request({
+    url: '/{{ moduleName }}/{{ businessName }}/list',
+    method: 'get',
+    params: query,
+  })
+}
+
+/**
+ * 获取完整{{ functionName }}树形列表（同步加载）
+ * GET /{{ moduleName }}/{{ businessName }}/tree
+ */
+export function get{{ ClassName }}Tree(query?: {{ ClassName }}QueryDTO): Promise<ResponseType<{{ ClassName }}TreeVO[]>> {
+  return request({
+    url: '/{{ moduleName }}/{{ businessName }}/tree',
+    method: 'get',
+    params: query,
+  })
+}
+
+/**
+ * 获取{{ functionName }}子节点列表（异步展开）
+ * GET /{{ moduleName }}/{{ businessName }}/children/{ {{ pkColumn.pythonField }} }
+ */
+export function get{{ ClassName }}Children({% if treeParentCode %}{{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}number{% elif pkColumn.pythonType == 'str' %}string{% else %}{{ pkColumn.pythonType }}{% endif %}{% endif %}, query?: {{ ClassName }}QueryDTO): Promise<ResponseType<{{ ClassName }}TreeVO[]>> {
+  return request({
+    {% if treeParentCode %}
+    url: `/{{ moduleName }}/{{ businessName }}/children/${{{ pkColumn.pythonField }}}`,
+    {% else %}
+    url: `/{{ moduleName }}/{{ businessName }}/children`,
+    {% endif %}
+    method: 'get',
+    params: query,
+  })
+}
+{% else %}
+/**
+ * 获取{{ functionName }}列表（分页）
+ * GET /{{ moduleName }}/{{ businessName }}/list
+ */
+export function get{{ ClassName }}List(query: {{ ClassName }}QueryDTO): Promise<ResponseType<PageResponse<{{ ClassName }}ListVO>>> {
+  return request({
+    url: '/{{ moduleName }}/{{ businessName }}/list',
+    method: 'get',
+    params: query,
+  })
+}
+{% endif %}
+
+/**
+ * 获取{{ functionName }}详情
+ * GET /{{ moduleName }}/{{ businessName }}/{ {{ pkColumn.pythonField }} }
+ */
+export function get{{ ClassName }}Detail({{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}number{% elif pkColumn.pythonType == 'str' %}string{% elif pkColumn.pythonType == 'datetime' %}string{% else %}{{ pkColumn.pythonType }}{% endif %}): Promise<ResponseType<{{ ClassName }}DetailVO>> {
+  return request({
+    url: `/{{ moduleName }}/{{ businessName }}/${{{ pkColumn.pythonField }}}`,
+    method: 'get',
+  })
+}
+
+/**
+ * 新增{{ functionName }}
+ * POST /{{ moduleName }}/{{ businessName }}/add
+ */
+export function add{{ ClassName }}(data: {{ ClassName }}CreateDTO): Promise<ResponseType<Empty>> {
+  return request({
+    url: '/{{ moduleName }}/{{ businessName }}/add',
+    method: 'post',
+    data,
+  })
+}
+
+/**
+ * 修改{{ functionName }}
+ * PUT /{{ moduleName }}/{{ businessName }}/edit
+ */
+export function update{{ ClassName }}(data: {{ ClassName }}UpdateDTO): Promise<ResponseType<Empty>> {
+  return request({
+    url: '/{{ moduleName }}/{{ businessName }}/edit',
+    method: 'put',
+    data,
+  })
+}
+
+/**
+ * 删除{{ functionName }}（支持批量删除）
+ * DELETE /{{ moduleName }}/{{ businessName }}/{ {{ pkColumn.pythonField }}s }
+ */
+export function delete{{ ClassName }}({{ pkColumn.pythonField }}s: string): Promise<ResponseType<Empty>> {
+  return request({
+    url: `/{{ moduleName }}/{{ businessName }}/${{{ pkColumn.pythonField }}s}`,
+    method: 'delete',
+  })
+}

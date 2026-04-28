@@ -1,0 +1,163 @@
+/*
+ * GraphEdu 角色主题变量
+ *
+ * 切换机制：
+ *   html[data-role="student"]          → 学生亮色
+ *   html[data-role="student"].dark     → 学生暗色
+ *   html[data-role="teacher"]          → 教师亮色
+ *   html[data-role="teacher"].dark     → 教师暗色
+ *
+ * admin 角色默认跟随 student 配色
+ */
+
+/* =========================================================================
+ * 1. 共享中性色（不随角色变化）
+ * ========================================================================= */
+
+:root {
+  /* ---- 基础文字色（所有未显式设置 color 的元素继承此值） ---- */
+  color: var(--ge-text-primary);
+
+  /* ---- 文字色 ---- */
+  --ge-text-primary: rgba(0, 0, 0, 0.88);
+  --ge-text-secondary: rgba(0, 0, 0, 0.65);
+  --ge-text-tertiary: rgba(0, 0, 0, 0.45);
+  --ge-text-disabled: rgba(0, 0, 0, 0.25);
+  --ge-text-anti: #fff;
+
+  /* ---- 背景色 ---- */
+  --ge-bg-page: #f0f2f5;
+  --ge-bg-container: #ffffff;
+  --ge-bg-elevated: #fafafa;
+
+  /* ---- 边框色 ---- */
+  --ge-border-color: #d9d9d9;
+
+  /* ---- 阴影 ---- */
+  --ge-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --ge-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+  /* ---- 功能色（各角色共享）---- */
+  --ge-error: #dc4242;
+  --ge-error-light: #fff0ed;
+  --ge-warning: #f06900;
+  --ge-warning-light: #fff1ea;
+  --ge-success: #00893c;
+  --ge-success-light: #e0fbdf;
+}
+
+/* ---- 暗色模式中性色覆盖 ---- */
+:root.dark {
+  --ge-text-primary: rgba(255, 255, 255, 0.85);
+  --ge-text-secondary: rgba(255, 255, 255, 0.65);
+  --ge-text-tertiary: rgba(255, 255, 255, 0.45);
+  --ge-text-disabled: rgba(255, 255, 255, 0.25);
+
+  --ge-bg-page: #141414;
+  --ge-bg-container: #1f1f1f;
+  --ge-bg-elevated: #262626;
+
+  --ge-border-color: #303030;
+
+  --ge-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --ge-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.45);
+
+  --ge-error: #fc625e;
+  --ge-error-light: #490004;
+  --ge-warning: #f06900;
+  --ge-warning-light: #3d1600;
+  --ge-success: #13a750;
+  --ge-success-light: #00260b;
+}
+
+/* =========================================================================
+ * 2. 学生蓝主题（默认）
+ * ========================================================================= */
+
+:root {
+  /* 主色调色板 1-10 */
+  --ge-primary-1: #e8f3ff;
+  --ge-primary-2: #c5e2ff;
+  --ge-primary-3: #97c9ff;
+  --ge-primary-4: #6aaeff;
+  --ge-primary-5: #4096ff;
+  --ge-primary-6: #1677ff;
+  --ge-primary-7: #0958d9;
+  --ge-primary-8: #003eb3;
+  --ge-primary-9: #002c8c;
+  --ge-primary-10: #001d66;
+
+  /* 语义映射 */
+  --ge-primary: var(--ge-primary-6);
+  --ge-primary-hover: var(--ge-primary-5);
+  --ge-primary-active: var(--ge-primary-7);
+  --ge-primary-focus: var(--ge-primary-2);
+  --ge-primary-light: var(--ge-primary-1);
+  --ge-primary-disabled: var(--ge-primary-3);
+}
+
+/* ---- 学生暗色 ---- */
+:root.dark {
+  --ge-primary-1: #111d3a;
+  --ge-primary-2: #152952;
+  --ge-primary-3: #19366a;
+  --ge-primary-4: #1d4382;
+  --ge-primary-5: #21509a;
+  --ge-primary-6: #2560b8;
+  --ge-primary-7: #3b7cd4;
+  --ge-primary-8: #5598eb;
+  --ge-primary-9: #7fb5f5;
+  --ge-primary-10: #a8d0ff;
+
+  --ge-primary: var(--ge-primary-8);
+  --ge-primary-hover: var(--ge-primary-7);
+  --ge-primary-active: var(--ge-primary-9);
+  --ge-primary-focus: var(--ge-primary-2);
+  --ge-primary-light: var(--ge-primary-1);
+  --ge-primary-disabled: var(--ge-primary-3);
+}
+
+/* =========================================================================
+ * 3. 教师绿主题
+ * ========================================================================= */
+
+:root[data-role='teacher'] {
+  --ge-primary-1: #ecfdf5;
+  --ge-primary-2: #d1fae5;
+  --ge-primary-3: #a7f3d0;
+  --ge-primary-4: #6ee7b7;
+  --ge-primary-5: #34d399;
+  --ge-primary-6: #10b981;
+  --ge-primary-7: #059669;
+  --ge-primary-8: #047857;
+  --ge-primary-9: #065f46;
+  --ge-primary-10: #064e3b;
+
+  --ge-primary: var(--ge-primary-6);
+  --ge-primary-hover: var(--ge-primary-5);
+  --ge-primary-active: var(--ge-primary-7);
+  --ge-primary-focus: var(--ge-primary-2);
+  --ge-primary-light: var(--ge-primary-1);
+  --ge-primary-disabled: var(--ge-primary-3);
+}
+
+/* ---- 教师暗色 ---- */
+:root[data-role='teacher'].dark {
+  --ge-primary-1: #064e3b;
+  --ge-primary-2: #065f46;
+  --ge-primary-3: #047857;
+  --ge-primary-4: #059669;
+  --ge-primary-5: #10b981;
+  --ge-primary-6: #1c7a4a;
+  --ge-primary-7: #23955a;
+  --ge-primary-8: #34c77e;
+  --ge-primary-9: #6ee7b7;
+  --ge-primary-10: #a7f3d0;
+
+  --ge-primary: var(--ge-primary-8);
+  --ge-primary-hover: var(--ge-primary-7);
+  --ge-primary-active: var(--ge-primary-9);
+  --ge-primary-focus: var(--ge-primary-2);
+  --ge-primary-light: var(--ge-primary-1);
+  --ge-primary-disabled: var(--ge-primary-3);
+}

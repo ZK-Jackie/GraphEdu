@@ -1,0 +1,59 @@
+name: Auto Deployment
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check Environment Variables and Secrets
+        run: |
+          ERROR_COUNT=0
+
+          if [ -z "${{ secrets.SERVER_HOST }}" ]; then
+            echo "::error::Missing secret: SERVER_HOST"
+            ERROR_COUNT=$((ERROR_COUNT+1))
+          fi
+          if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
+            echo "::error::Missing secret: SERVER_USERNAME"
+            ERROR_COUNT=$((ERROR_COUNT+1))
+          fi
+          if [ -z "${{ secrets.SERVER_DEPLOYMENT_PATH }}" ]; then
+            echo "::error::Missing secret: SERVER_DEPLOYMENT_PATH"
+            ERROR_COUNT=$((ERROR_COUNT+1))
+          fi
+
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "::error::Deployment failed due to missing environments/secrets."
+            exit 1
+          fi
+
+      # https://github.com/appleboy/ssh-action
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          # key: ${{ secrets.SERVER_PRIVATE_KEY }}
+          command_timeout: 10m
+          script: |
+            DEPLOY_PATH="${{ secrets.SERVER_DEPLOYMENT_PATH }}"
+            if [ ! -d "$DEPLOY_PATH" ]; then
+              echo "::error::Deployment directory $DEPLOY_PATH does not exist. Please clone the repository first."
+              exit 1
+            fi
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              echo "::error::$DEPLOY_PATH is not a git repository. Please clone the repository first."
+              exit 1
+            fi
+            cd "$DEPLOY_PATH"
+            git pull origin main
+            cd docker
+            docker compose build --pull
+            docker compose up -d --remove-orphans
+            docker image prune -f

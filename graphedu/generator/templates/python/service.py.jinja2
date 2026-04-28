@@ -1,0 +1,144 @@
+"""{{ functionName }}服务模块。
+
+该模块提供{{ functionName }}的管理功能。
+
+职责：
+1. 处理业务逻辑。
+2. DTO 到 ORM 的转换。
+3. 组装 VO 返回。
+"""
+
+import logging
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from graphedu.common.models.vo.base import PageResponse
+from graphedu.common.models.dto.{{ businessName }} import (
+    {{ ClassName }}CreateDTO,
+    {{ ClassName }}QueryDTO,
+    {{ ClassName }}UpdateDTO,
+)
+{% if tplCategory == 'tree' %}
+{% if ormClassName and ormClassName != ClassName + 'Tree' %}
+from graphedu.common.models.orm.{{ domainName }} import {{ ormClassName }}Tree as {{ ClassName }}
+{% else %}
+from graphedu.common.models.orm import {{ ClassName }}Tree as {{ ClassName }}
+{% endif %}
+{% else %}
+{% if ormClassName and ormClassName != ClassName %}
+from graphedu.common.models.orm.{{ domainName }} import {{ ormClassName }} as {{ ClassName }}
+{% else %}
+from graphedu.common.models.orm import {{ ClassName }}
+{% endif %}
+{% endif %}
+from graphedu.common.models.vo.{{ businessName }} import {{ ClassName }}DetailVO, {{ ClassName }}ListVO
+from graphedu.mapper.{{ businessName }} import {{ ClassName }}Mapper
+
+logger = logging.getLogger(__name__)
+
+
+class {{ ClassName }}Service:
+    """{{ functionName }}管理服务类。
+
+    提供{{ functionName }}的查询、新增、更新和删除功能。
+    """
+
+    @staticmethod
+    async def get_{{ className }}_list(
+        query_db: AsyncSession,
+        query_object: {{ ClassName }}QueryDTO,
+    ) -> PageResponse[{{ ClassName }}ListVO]:
+        """获取{{ functionName }}列表。
+
+        Args:
+            query_db: 数据库会话。
+            query_object: 查询参数对象。
+
+        Returns:
+            PageResponse[{{ ClassName }}ListVO]: {{ functionName }}分页结果。
+        """
+        {{ className }}_list_result, total = await {{ ClassName }}Mapper.get_{{ className }}_list(query_object, query_db)
+        vo_list = [{{ ClassName }}ListVO.model_validate(item) for item in {{ className }}_list_result]
+
+        return PageResponse(
+            rows=vo_list,
+            page=query_object.page or 1,
+            size=query_object.size or 10,
+            total=total,
+        )
+
+    @staticmethod
+    async def get_{{ className }}_detail(
+        {{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% elif pkColumn.pythonType == 'datetime' %}datetime{% else %}{{ pkColumn.pythonType }}{% endif %},
+        query_db: AsyncSession,
+    ) -> {{ ClassName }}DetailVO | None:
+        """获取{{ functionName }}详情。
+
+        Args:
+            {{ pkColumn.pythonField }}: {{ pkColumn.columnComment }}
+            query_db: 数据库会话。
+
+        Returns:
+            {{ ClassName }}DetailVO | None: {{ functionName }}详情 VO，如果不存在则返回 None。
+        """
+        orm_result = await {{ ClassName }}Mapper.get_by_id({{ pkColumn.pythonField }}, query_db)
+        if orm_result:
+            return {{ ClassName }}DetailVO.model_validate(orm_result)
+        return None
+
+    @staticmethod
+    async def add_{{ className }}(
+        query_db: AsyncSession,
+        {{ className }}_dto: {{ ClassName }}CreateDTO,
+    ) -> None:
+        """新增{{ functionName }}。
+
+        Args:
+            query_db: 数据库会话。
+            {{ className }}_dto: 新增{{ functionName }} DTO。
+        """
+        # DTO -> ORM
+        new_orm = {{ ClassName }}(**{{ className }}_dto.model_dump())
+        await {{ ClassName }}Mapper.add_{{ className }}(new_orm, query_db)
+        logger.info("新增{{ functionName }}成功")
+
+    @staticmethod
+    async def update_{{ className }}(
+        query_db: AsyncSession,
+        {{ className }}_dto: {{ ClassName }}UpdateDTO,
+    ) -> None:
+        """更新{{ functionName }}。
+
+        Args:
+            query_db: 数据库会话。
+            {{ className }}_dto: 更新{{ functionName }} DTO。
+        """
+        # 获取现有记录
+        existing_orm = await {{ ClassName }}Mapper.get_by_id({{ className }}_dto.{{ pkColumn.pythonField }}, query_db)
+        if not existing_orm:
+            raise ValueError("{{ functionName }}不存在")
+
+        # DTO -> ORM（更新字段）
+        update_data = {{ className }}_dto.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(existing_orm, field, value)
+
+        await {{ ClassName }}Mapper.update_{{ className }}(existing_orm, query_db)
+        logger.info(f"更新{{ functionName }}成功: {{{{ className }}_dto.{{ pkColumn.pythonField }}}}")
+
+    @staticmethod
+    async def delete_{{ className }}(
+        query_db: AsyncSession,
+        {{ pkColumn.pythonField }}s: list[
+            {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% elif pkColumn.pythonType == 'datetime' %}datetime{% else %}{{ pkColumn.pythonType }}{% endif %}
+        ],
+    ) -> None:
+        """删除{{ functionName }}（支持批量删除）。
+
+        Args:
+            query_db: 数据库会话。
+            {{ pkColumn.pythonField }}s: {{ functionName }} ID 列表。
+        """
+        for {{ pkColumn.pythonField }} in {{ pkColumn.pythonField }}s:
+            await {{ ClassName }}Mapper.delete_{{ className }}({{ pkColumn.pythonField }}, query_db)
+            logger.info(f"删除{{ functionName }}成功: {{{{ pkColumn.pythonField }}}}")

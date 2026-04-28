@@ -1,0 +1,34 @@
+{
+  "title": "My Learning",
+  "myCourses": "My Courses",
+  "inProgress": "In Progress",
+  "completed": "Completed",
+  "lastStudyTime": "Last Study",
+  "neverLearned": "Never studied",
+  "noCourses": "No courses",
+  "noCoursesHint": "You haven't been assigned any courses yet, please contact the administrator",
+  "courseTabs": {
+    "all": "All Courses",
+    "enrolled": "Enrolled",
+    "available": "Available"
+  },
+  "enrolledCourses": {
+    "empty": "No courses enrolled yet",
+    "emptyHint": "Browse courses to discover more amazing content"
+  },
+  "availableCourses": {
+    "empty": "No courses available to join",
+    "emptyHint": "You have joined all public courses, or there are no courses available under current filters"
+  },
+  "today": "today",
+  "yesterday": "yesterday",
+  "daysAgo": "days ago",
+  "joinByCode": "Join by Course Code",
+  "joinByCodePlaceholder": "Please enter course code",
+  "joinByCodeDialogTitle": "Join Course by Code",
+  "joinByCodeSuccess": "Successfully joined the course",
+  "joinByCodeFailed": "Failed to join the course",
+  "joinByCodeNotFound": "Course code not found",
+  "joinByCodeAlreadyJoined": "You have already joined this course",
+  "createCourse": "Create Course"
+}

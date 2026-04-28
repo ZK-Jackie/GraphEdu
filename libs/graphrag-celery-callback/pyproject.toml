@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "graphrag-celery-callback"
+version = "0.0.1"
+description = "GraphRAG celery workflow callback implementation"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "celery>=5.6.3",
+    "graphrag-common==3.0.8",
+]
+

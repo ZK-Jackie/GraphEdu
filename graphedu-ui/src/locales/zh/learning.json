@@ -1,0 +1,34 @@
+{
+  "title": "我的学习",
+  "myCourses": "我的课程",
+  "inProgress": "进行中",
+  "completed": "已完成",
+  "lastStudyTime": "最后学习",
+  "neverLearned": "尚未开始学习",
+  "noCourses": "暂无课程",
+  "noCoursesHint": "您还没有被派发任何课程，请联系管理员",
+  "courseTabs": {
+    "all": "全部课程",
+    "enrolled": "已加入",
+    "available": "未加入"
+  },
+  "enrolledCourses": {
+    "empty": "暂未加入任何课程",
+    "emptyHint": "去浏览课程，发现更多精彩内容"
+  },
+  "availableCourses": {
+    "empty": "暂无可加入课程",
+    "emptyHint": "您已加入所有公开课程，或当前筛选条件下无课程可加入"
+  },
+  "today": "今天",
+  "yesterday": "昨天",
+  "daysAgo": "天前",
+  "joinByCode": "通过课程码加入",
+  "joinByCodePlaceholder": "请输入课程码",
+  "joinByCodeDialogTitle": "通过课程码加入课程",
+  "joinByCodeSuccess": "成功加入课程",
+  "joinByCodeFailed": "加入课程失败",
+  "joinByCodeNotFound": "课程码不存在",
+  "joinByCodeAlreadyJoined": "您已加入该课程",
+  "createCourse": "新建课程"
+}

@@ -1,0 +1,31 @@
+-- ============================================================================
+-- {{ functionName }}菜单 SQL
+-- 生成时间: {{ datetime }}
+-- 生成作者: {{ author }}
+-- ============================================================================
+
+DO $$
+DECLARE
+    v_parent_menu_id BIGINT;
+BEGIN
+    -- 插入{{ functionName }}主菜单并获取返回的 ID
+    INSERT INTO sys_function (
+        function_name, function_type, scene, route_path, component,
+        layout_component, parent_id, icon, order_num, visible, status
+    ) VALUES (
+        '{{ functionName }}管理', 'MENU', 'admin', '/{{ moduleName }}/{{ businessName }}',
+        'system/{{ businessName }}/index', 'layout/AdminLayout/index',
+        {{ parentMenuId }}, '{{ table.icon | default("") }}', {{ table.orderNum | default(1) }}, '1', '0'
+    )
+    RETURNING function_id INTO v_parent_menu_id;
+
+    -- 插入{{ functionName }}按钮权限（使用变量获取父菜单 ID）
+    INSERT INTO sys_function (function_name, function_type, scene, route_path, parent_id, order_num, visible, status) VALUES
+    ('{{ moduleName }}:{{ businessName }}:list', 'INTERFACE', 'admin', '{{ moduleName }}:{{ businessName }}:list', v_parent_menu_id, 1, '1', '0'),
+    ('{{ moduleName }}:{{ businessName }}:query', 'INTERFACE', 'admin', '{{ moduleName }}:{{ businessName }}:query', v_parent_menu_id, 2, '1', '0'),
+    ('{{ moduleName }}:{{ businessName }}:add', 'INTERFACE', 'admin', '{{ moduleName }}:{{ businessName }}:add', v_parent_menu_id, 3, '1', '0'),
+    ('{{ moduleName }}:{{ businessName }}:edit', 'INTERFACE', 'admin', '{{ moduleName }}:{{ businessName }}:edit', v_parent_menu_id, 4, '1', '0'),
+    ('{{ moduleName }}:{{ businessName }}:remove', 'INTERFACE', 'admin', '{{ moduleName }}:{{ businessName }}:remove', v_parent_menu_id, 5, '1', '0'),
+    ('{{ moduleName }}:{{ businessName }}:export', 'INTERFACE', 'admin', '{{ moduleName }}:{{ businessName }}:export', v_parent_menu_id, 6, '1', '0');
+
+END $$;

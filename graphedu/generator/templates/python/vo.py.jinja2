@@ -1,0 +1,57 @@
+"""{{ functionName }}相关 VO 模型 (View Objects - 响应模型)
+
+职责：
+1. 定义 API 响应的数据结构
+2. 配置序列化规则（from_attributes=True 支持从 ORM 对象创建）
+"""
+
+{% for type in columnTypes %}
+{% if type == 'datetime' %}
+from datetime import datetime
+{% elif type == 'decimal' %}
+from decimal import Decimal
+{% endif %}
+{% endfor %}
+
+from pydantic import Field
+
+from graphedu.common.models.vo.base import VO
+
+
+# ============================================================================
+# {{ functionName }}相关 VO
+# ============================================================================
+
+
+class {{ ClassName }}ListVO(VO):
+    """{{ functionName }}列表项 VO"""
+
+    {% for column in columns if column.list == '1' %}
+    {{ column.pythonField }}: {% if column.pythonType == 'str' %}str{% elif column.pythonType == 'int' %}int{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'decimal' %}Decimal{% else %}{{ column.pythonType }}{% endif %} = Field(description="{{ column.columnComment }}")
+    {% endfor %}
+
+
+class {{ ClassName }}DetailVO(VO):
+    """{{ functionName }}详情 VO"""
+
+    {% for column in columns %}
+    {{ column.pythonField }}: {% if column.isRequired == '1' or column.pythonType in ['int', 'datetime', 'bool', 'Decimal'] %}{% if column.pythonType == 'str' %}str{% elif column.pythonType == 'int' %}int{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'decimal' %}Decimal{% else %}{{ column.pythonType }}{% endif %}{% else %}{% if column.pythonType == 'str' %}str | None = Field(default="", description="{{ column.columnComment }}"){% elif column.pythonType == 'int' %}int | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'datetime' %}datetime | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'bool' %}bool | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'decimal' %}Decimal | None = Field(default=None, description="{{ column.columnComment }}"){% else %}{{ column.pythonType }} | None = Field(default=None, description="{{ column.columnComment }}"){% endif %}{% endif %}{% if column.isRequired != '1' and column.pythonType in ['int', 'datetime', 'bool', 'Decimal'] %} | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.isRequired == '1' or column.pythonType == 'str' %} = Field(description="{{ column.columnComment }}"){% endif %}
+    {% endfor %}
+
+
+{% if tplCategory == 'tree' %}
+class {{ ClassName }}TreeVO(VO):
+    """{{ functionName }}树节点 VO"""
+
+    {% for column in columns %}
+    {{ column.pythonField }}: {% if column.isRequired == '1' or column.pythonType in ['int', 'datetime', 'bool', 'Decimal'] %}{% if column.pythonType == 'str' %}str{% elif column.pythonType == 'int' %}int{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'decimal' %}Decimal{% else %}{{ column.pythonType }}{% endif %}{% else %}{% if column.pythonType == 'str' %}str | None = Field(default="", description="{{ column.columnComment }}"){% elif column.pythonType == 'int' %}int | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'datetime' %}datetime | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'bool' %}bool | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'decimal' %}Decimal | None = Field(default=None, description="{{ column.columnComment }}"){% else %}{{ column.pythonType }} | None = Field(default=None, description="{{ column.columnComment }}"){% endif %}{% endif %}{% if column.isRequired != '1' and column.pythonType in ['int', 'datetime', 'bool', 'Decimal'] %} | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.isRequired == '1' or column.pythonType == 'str' %} = Field(description="{{ column.columnComment }}"){% endif %}
+    {% endfor %}
+    has_children: bool = Field(default=False, description="是否有子节点")
+    children: list["{{ ClassName }}TreeVO"] = Field(default_factory=list, description="子节点列表")
+
+
+# 更新前向引用
+{% if tplCategory == 'tree' %}
+{{ ClassName }}TreeVO.model_rebuild()
+{% endif %}
+{% endif %}

@@ -1,0 +1,19 @@
+{
+  "msg_type": "interactive",
+  "card": {
+    "type": "template",
+    "data": {
+      "template_id": "AAqvhQ7JrNIJd",
+      "template_version_name": "0.0.2",
+      "template_variable": {
+        "log_time": "${log_time}",
+        "log_level": "${log_level}",
+        "log_message": "${log_message}",
+        "log_line": "${log_line}",
+        "stack_info": "${stack_info}",
+        "heading_project_name": "${heading_project_name}",
+        "heading_color": "${heading_color}"
+      }
+    }
+  }
+}

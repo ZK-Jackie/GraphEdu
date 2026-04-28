@@ -1,0 +1,70 @@
+# 前端构建忽略文件（构建上下文：项目根目录）
+# BuildKit 自动识别小写 Dockerfile.dockerignore
+
+# 前端依赖和构建产物
+graphedu-ui/node_modules/
+graphedu-ui/dist/
+graphedu-ui/dist-ssr/
+graphedu-ui/.vitest/
+graphedu-ui/playwright-report/
+graphedu-ui/test-results/
+graphedu-ui/coverage/
+
+# 后端源码（不需要）
+graphedu/
+tests/
+
+# Docker（保留 nginx.conf，排除其余）
+docker/**
+!docker/frontend/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 日志和数据
+data/
+*.log
+
+
+# Documentation
+*.md
+docs/
+README.md
+LICENSE
+CLAUDE.md
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yaml
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Configuration (use env var)
+.env
+.env.local
+.env.*.local
+
+# Cache
+.cache/
+.temp/
+*.tmp
+*.bak
+
+# Logs
+logs/
+
+# Misc
+.pnpm-store/

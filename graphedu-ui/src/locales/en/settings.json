@@ -1,0 +1,22 @@
+{
+  "title": "Account Settings",
+  "language": {
+    "label": "Interface Language",
+    "zh": "中文",
+    "en": "English"
+  },
+  "timezone": {
+    "label": "Timezone"
+  },
+  "timeFormat": {
+    "label": "Time Format",
+    "preview": "Preview"
+  },
+  "relativeTime": {
+    "label": "Relative Time",
+    "help": "When enabled, shows relative time like \"3 minutes ago\". Full time is displayed after 7 days"
+  },
+  "save": "Save",
+  "saveSuccess": "Settings saved successfully",
+  "resetSuccess": "Settings have been reset"
+}

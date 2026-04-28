@@ -1,0 +1,43 @@
+"""{{ functionName }}相关DTO模型"""
+
+{% for type in columnTypes %}
+{% if type == 'datetime' %}
+from datetime import datetime
+{% elif type == 'decimal' %}
+from decimal import Decimal
+{% endif %}
+{% endfor %}
+
+from pydantic import Field
+
+from graphedu.common.models.dto.base import DTO, PageQuery
+
+
+# ============================================================================
+# {{ functionName }}相关 DTO
+# ============================================================================
+
+
+class {{ ClassName }}QueryDTO(PageQuery):
+    """{{ functionName }}查询参数"""
+
+    {% for column in columns if column.query == '1' and column.pythonField not in ['createTime', 'updateTime'] %}
+    {{ column.pythonField }}: {% if column.pythonType == 'str' %}str | None{% elif column.pythonType == 'int' %}int | None{% elif column.pythonType == 'datetime' %}datetime | None{% elif column.pythonType == 'bool' %}bool | None{% elif column.pythonType == 'decimal' %}Decimal | None{% else %}{{ column.pythonType }} | None{% endif %} = Field(default=None, description="{{ column.columnComment }}")
+    {% endfor %}
+
+
+class {{ ClassName }}CreateDTO(DTO):
+    """{{ functionName }}创建DTO"""
+
+    {% for column in columns if column.insert == '1' and column.isIncrement != '1' and column.pythonField not in ['createTime', 'updateTime', 'createBy', 'updateBy'] %}
+    {{ column.pythonField }}: {% if column.isRequired == '1' %}{% if column.pythonType == 'str' %}str{% elif column.pythonType == 'int' %}int{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'decimal' %}Decimal{% else %}{{ column.pythonType }}{% endif %}{% else %}{% if column.pythonType == 'str' %}str | None = Field(default="", description="{{ column.columnComment }}"){% elif column.pythonType == 'int' %}int | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'datetime' %}datetime | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'bool' %}bool | None = Field(default=None, description="{{ column.columnComment }}"){% elif column.pythonType == 'decimal' %}Decimal | None = Field(default=None, description="{{ column.columnComment }}"){% else %}{{ column.pythonType }} | None = Field(default=None, description="{{ column.columnComment }}"){% endif %}{% endif %}{% if column.isRequired != '1' or column.pythonType == 'str' %} = Field(default=""{% if column.pythonType == 'int' %}None{% elif column.pythonType == 'datetime' %}None{% elif column.pythonType == 'bool' %}None{% elif column.pythonType == 'decimal' %}None{% endif %}, description="{{ column.columnComment }}"){% endif %}
+    {% endfor %}
+
+
+class {{ ClassName }}UpdateDTO(DTO):
+    """{{ functionName }}更新DTO"""
+
+    {{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% elif pkColumn.pythonType == 'datetime' %}datetime{% elif pkColumn.pythonType == 'bool' %}bool{% elif pkColumn.pythonType == 'decimal' %}Decimal{% else %}{{ pkColumn.pythonType }}{% endif %} = Field(description="{{ pkColumn.columnComment }}")
+    {% for column in columns if column.edit == '1' and column.pythonField not in ['createTime', 'updateTime', 'createBy', 'updateBy', pkColumn.pythonField] %}
+    {{ column.pythonField }}: {% if column.isRequired == '1' %}{% if column.pythonType == 'str' %}str{% elif column.pythonType == 'int' %}int{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'decimal' %}Decimal{% else %}{{ column.pythonType }}{% endif %}{% else %}{% if column.pythonType == 'str' %}str | None{% elif column.pythonType == 'int' %}int | None{% elif column.pythonType == 'datetime' %}datetime | None{% elif column.pythonType == 'bool' %}bool | None{% elif column.pythonType == 'decimal' %}Decimal | None{% else %}{{ column.pythonType }} | None{% endif %}{% endif %} = Field(default=None, description="{{ column.columnComment }}")
+    {% endfor %}

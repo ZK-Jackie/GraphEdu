@@ -1,0 +1,7 @@
+{
+  "common": "tests/common",
+  "unit": "tests/unit",
+  "integration": "tests/integration",
+  "e2e": "tests/e2e",
+  "api": "tests/api"
+}

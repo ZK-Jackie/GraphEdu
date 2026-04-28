@@ -1,0 +1,191 @@
+# GraphEdu 生产环境 Docker Compose 配置
+# 使用方法: docker compose -f docker/docker-compose.yaml up -d
+
+services:
+  # ========================================
+  # PostgreSQL 数据库服务
+  # ========================================
+  postgres:
+    # 使用自定义镜像（包含 pgvector、age 扩展）
+    image: jackiey101/graphedu-postgres:${POSTGRES_VERSION:-18.3.0}
+    profiles:
+      - postgres
+    pull_policy: missing
+    build:
+      context: ..
+      dockerfile: docker/pg/Dockerfile
+    container_name: graphedu-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-graphedu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-graphedu_password}
+      POSTGRES_DB: ${POSTGRES_DB:-graphedu}
+    volumes:
+      - ./volumes/pg:/var/lib/postgresql
+      - ./pg/init:/docker-entrypoint-initdb.d:ro
+    # 不暴露端口到宿主机，仅通过内部网络访问
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-graphedu}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - graphedu-network
+
+  # ========================================
+  # Redis 缓存服务
+  # ========================================
+  redis:
+    image: redis:${REDIS_VERSION:-8.6.2-alpine}
+    profiles:
+      - redis
+    container_name: graphedu-redis
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - ./volumes/redis:/data
+      - ./redis/conf:/usr/local/etc/redis:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - graphedu-network
+
+  # ========================================
+  # 后端服务
+  # 配置文件通过 volume 挂载，自动发现按优先级选择：
+  # prod.config.yaml > dev.config.yaml > *.config.yaml > config.yaml
+  # ========================================
+  backend:
+    image: jackiey101/graphedu-backend:${BACKEND_VERSION:-latest}
+    profiles:
+      - backend
+    pull_policy: missing
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    container_name: graphedu-backend
+    init: true
+    restart: unless-stopped
+    expose:
+      - "8000"
+    command: ["uv", "run", "-m", "graphedu", "service", "prod"]
+    volumes:
+      - ./volumes/backend-data:/app/data
+      - ../prod.config.yaml:/app/prod.config.yaml:ro
+#      - ../dev.config.yaml:/app/dev.config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "uv run python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - graphedu-network
+
+  # ========================================
+  # Celery Worker 异步任务执行服务
+  # 与 backend 共用同一镜像，以不同命令启动
+  # ========================================
+  worker:
+    image: jackiey101/graphedu-backend:${BACKEND_VERSION:-latest}
+    profiles:
+      - worker
+    pull_policy: missing
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    container_name: graphedu-worker
+    init: true
+    restart: unless-stopped
+    volumes:
+      - ./volumes/worker-data:/app/data
+      - ../prod.config.yaml:/app/prod.config.yaml:ro
+#      - ../dev.config.yaml:/app/dev.config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
+    command: ["uv", "run", "-m", "graphedu", "worker", "start"]
+    networks:
+      - graphedu-network
+
+  # ========================================
+  # Celery Beat 定时调度服务
+  # 与 backend 共用同一镜像，以不同命令启动
+  # ========================================
+  beat:
+    image: jackiey101/graphedu-backend:${BACKEND_VERSION:-latest}
+    profiles:
+      - beat
+    pull_policy: missing
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    container_name: graphedu-beat
+    init: true
+    restart: unless-stopped
+    volumes:
+      - ./volumes/beat-data:/app/data
+      - ../prod.config.yaml:/app/prod.config.yaml:ro
+#      - ../dev.config.yaml:/app/dev.config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
+    command: ["uv", "run", "-m", "graphedu", "beat", "start"]
+    networks:
+      - graphedu-network
+
+  # ========================================
+  # 网关服务 (Nginx：SPA 静态文件 + /api/ 反向代理)
+  # SSL / Gzip / Brotli 等高级功能请在外层代理（宿主机 Nginx / Caddy / Traefik）中配置
+  # ========================================
+  frontend:
+    image: jackiey101/graphedu-frontend:${FRONTEND_VERSION:-latest}
+    profiles:
+      - frontend
+    pull_policy: missing
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: graphedu-frontend
+    restart: unless-stopped
+    ports:
+      - ${FRONTEND_PORT:-11334}:80
+    depends_on:
+      backend:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - graphedu-network
+
+# ========================================
+# 网络配置
+# ========================================
+networks:
+  graphedu-network:
+    driver: bridge

@@ -1,0 +1,60 @@
+"""{{ functionName }} ORM 实体类（由代码生成器自动生成）
+
+注意：
+    本文件由 CLI 代码生成器生成，生成后请：
+    1. 将此实体类合并到对应领域的 ORM 文件中（如 education.py / system.py），
+       并修改基类为该领域的 DeclarativeBase 子类（如 EduBase / SysBase）。
+    2. 或直接使用本文件，但需确保与项目中其他 ORM 实体共享同一个 MetaData。
+"""
+
+from __future__ import annotations
+
+{% if 'datetime' in columnTypes or 'date' in columnTypes or 'time' in columnTypes %}
+from datetime import {{ columnTypes | select('in', ['datetime', 'date', 'time']) | join(', ') }}
+{% endif %}
+{% if 'Decimal' in columnTypes %}
+from decimal import Decimal
+{% endif %}
+{% if 'dict' in columnTypes %}
+from typing import Any
+{% endif %}
+
+from sqlalchemy import {{ saImports | join(', ') }}{% if saImports and 'func' not in saImports %}, func{% else %}
+{% if not saImports %}from sqlalchemy import func{% endif %}
+{% endif %}
+
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+{% if 'JSONB' in saImports %}
+from sqlalchemy.dialects.postgresql import JSONB
+{% endif %}
+
+
+class {{ ClassName }}Base(DeclarativeBase):
+    """{{ functionName }} SQLAlchemy 声明式基类
+    
+    实际集成时请替换为领域基类（EduBase / SysBase 等）。
+    """
+
+
+class {{ ClassName }}({{ ClassName }}Base):
+    """{{ tableComment or functionName }}表。"""
+
+    __tablename__ = "{{ tableName }}"
+
+    {% for column in columns %}
+    {% if column.isPk == '1' %}
+    {{ column.pythonField }}: Mapped[{% if column.pythonType == 'int' %}int{% elif column.pythonType == 'str' %}str{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'date' %}date{% elif column.pythonType == 'time' %}time{% elif column.pythonType == 'Decimal' %}Decimal{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'dict' %}dict[str, Any]{% else %}{{ column.pythonType }}{% endif %}] = mapped_column(
+        {{ column.saType }}, primary_key=True{% if column.columnComment %}, comment="{{ column.columnComment }}"{% endif %}
+    )
+    {% elif column.isRequired == '1' %}
+    {{ column.pythonField }}: Mapped[{% if column.pythonType == 'int' %}int{% elif column.pythonType == 'str' %}str{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'date' %}date{% elif column.pythonType == 'time' %}time{% elif column.pythonType == 'Decimal' %}Decimal{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'dict' %}dict[str, Any]{% else %}{{ column.pythonType }}{% endif %}] = mapped_column(
+        {{ column.saType }}, nullable=False{% if column.columnName in ['create_time', 'update_time'] %}, default=func.current_timestamp(){% endif %}{% if column.columnComment %}, comment="{{ column.columnComment }}"{% endif %}
+    )
+    {% else %}
+    {{ column.pythonField }}: Mapped[{% if column.pythonType == 'int' %}int{% elif column.pythonType == 'str' %}str{% elif column.pythonType == 'datetime' %}datetime{% elif column.pythonType == 'date' %}date{% elif column.pythonType == 'time' %}time{% elif column.pythonType == 'Decimal' %}Decimal{% elif column.pythonType == 'bool' %}bool{% elif column.pythonType == 'dict' %}dict[str, Any]{% else %}{{ column.pythonType }}{% endif %} | None] = mapped_column(
+        {{ column.saType }}, nullable=True{% if column.columnName in ['create_time', 'update_time'] %}, default=func.current_timestamp(){% endif %}{% if column.columnComment %}, comment="{{ column.columnComment }}"{% endif %}
+    )
+    {% endif %}
+    {% endfor %}
+
+    __table_args__ = ({"comment": "{{ tableComment or functionName }}"},)

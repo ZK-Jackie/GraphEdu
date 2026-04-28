@@ -1,0 +1,59 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+*.md
+docs/
+LICENSE
+.claude/
+CLAUDE.md
+.github/
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+
+# Frontend (handled by frontend dockerignore)
+graphedu-ui/
+node_modules/
+
+# Data and logs
+data/
+logs/
+*.log
+uploads/
+
+# Docker (keep these)
+docker/
+.dockerignore
+docker-compose*.yaml
+Makefile
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# Config — *.config.yaml 保留在构建上下文中，供自动发现使用
+.env
+.env.*
+
+# Build artifacts
+dist/
+build/
+*.egg

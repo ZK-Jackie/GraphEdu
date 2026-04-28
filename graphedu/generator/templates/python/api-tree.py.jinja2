@@ -1,0 +1,157 @@
+"""{{ functionName }} Controller 层
+
+职责：
+1. 接收HTTP请求，使用DTO进行参数验证
+2. 调用Service层处理业务逻辑
+3. 响应VO对象给前端
+4. 支持树表结构查询和异步展开
+"""
+
+import logging
+
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from graphedu.common.models.vo.base import ResponseUtil, ResponseType, PageResponse
+from graphedu.common.models.dto.{{ businessName }} import (
+    {{ ClassName }}CreateDTO,
+    {{ ClassName }}QueryDTO,
+    {{ ClassName }}UpdateDTO,
+)
+from graphedu.common.models.vo.{{ businessName }} import {{ ClassName }}DetailVO, {{ ClassName }}ListVO, {{ ClassName }}TreeVO
+from graphedu.security.aspect.interface_auth import CheckUserInterfacePermit
+from graphedu.security.auth import SecurityService
+from graphedu.common.resource.deps import get_db
+from graphedu.services.system.{{ businessName }} import {{ ClassName }}Service
+
+logger = logging.getLogger(__name__)
+
+{{ className }}_controller = APIRouter(
+    prefix="/{{ moduleName }}/{{ businessName }}",
+    dependencies=[Depends(SecurityService.get_current_user)],
+)
+
+
+# ============================================================================
+# {{ functionName }}管理接口（树表）
+# ============================================================================
+
+
+@{{ className }}_controller.get(
+    "/list",
+    dependencies=[Depends(CheckUserInterfacePermit("{{ moduleName }}:{{ businessName }}:list"))],
+    response_model=ResponseType[PageResponse[{{ ClassName }}ListVO]],
+)
+async def get_{{ className }}_list(
+    query_object: {{ ClassName }}QueryDTO = Query(),
+    query_db: AsyncSession = Depends(get_db),
+):
+    """获取{{ functionName }}列表（分页）"""
+    {{ className }}_result = await {{ ClassName }}Service.get_{{ className }}_list(query_db, query_object)
+    return ResponseUtil.success(data={{ className }}_result)
+
+
+@{{ className }}_controller.get(
+    "/tree",
+    dependencies=[Depends(CheckUserInterfacePermit("{{ moduleName }}:{{ businessName }}:list"))],
+    response_model=ResponseType[list[{{ ClassName }}TreeVO]],
+)
+async def get_{{ className }}_tree(
+    query_object: {{ ClassName }}QueryDTO = Query(),
+    query_db: AsyncSession = Depends(get_db),
+):
+    """获取完整{{ functionName }}树形列表（同步加载）"""
+    tree_result = await {{ ClassName }}Service.get_{{ className }}_tree(query_db, query_object)
+    return ResponseUtil.success(data=tree_result)
+
+
+@{{ className }}_controller.get(
+    "/children/{% if treeParentCode %}{{{ pkColumn.pythonField }}}{% endif %}",
+    dependencies=[Depends(CheckUserInterfacePermit("{{ moduleName }}:{{ businessName }}:list"))],
+    response_model=ResponseType[list[{{ ClassName }}TreeVO]],
+)
+async def get_{{ className }}_children(
+    {% if treeParentCode %}
+    {{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% else %}{{ pkColumn.pythonType }}{% endif %} = Path(description="{{ pkColumn.columnComment }}（父节点ID）"),
+    {% endif %}
+    query_object: {{ ClassName }}QueryDTO = Query(),
+    query_db: AsyncSession = Depends(get_db),
+):
+    """获取{{ functionName }}子节点列表（异步展开接口）"""
+    children_result = await {{ ClassName }}Service.get_{{ className }}_children(
+        query_db,
+        query_object,
+        {% if treeParentCode and pkColumn.pythonType == 'int' %}{{ pkColumn.pythonField }},{% elif treeParentCode and pkColumn.pythonType == 'str' %}{{ pkColumn.pythonField }},{% elif treeParentCode %}{{ pkColumn.pythonField }},{% endif %}
+    )
+    return ResponseUtil.success(data=children_result)
+
+
+@{{ className }}_controller.get(
+    "/{{{pkColumn.pythonField}}}",
+    dependencies=[Depends(CheckUserInterfacePermit("{{ moduleName }}:{{ businessName }}:query"))],
+    response_model=ResponseType[{{ ClassName }}DetailVO],
+)
+async def get_{{ className }}_detail(
+    {{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% elif pkColumn.pythonType == 'datetime' %}datetime{% else %}{{ pkColumn.pythonType }}{% endif %} = Path(description="{{ pkColumn.columnComment }}"),
+    query_db: AsyncSession = Depends(get_db),
+):
+    """获取{{ functionName }}详情"""
+    detail = await {{ ClassName }}Service.get_{{ className }}_detail({{ pkColumn.pythonField }}, query_db)
+    if detail is None:
+        return ResponseUtil.fail(msg="{{ functionName }}不存在")
+    return ResponseUtil.success(data=detail)
+
+
+@{{ className }}_controller.post(
+    "/add",
+    dependencies=[Depends(CheckUserInterfacePermit("{{ moduleName }}:{{ businessName }}:add"))],
+    response_model=ResponseType[Empty],
+)
+@SystemLog(title="{{ functionName }}", business_type=SysConst.BusinessType.INSERT)
+async def add_{{ className }}(
+    {{ className }}_dto: {{ ClassName }}CreateDTO,
+    query_db: AsyncSession = Depends(get_db),
+):
+    """新增{{ functionName }}"""
+    await {{ ClassName }}Service.add_{{ className }}(query_db, {{ className }}_dto)
+    return ResponseUtil.success(msg="新增成功")
+
+
+@{{ className }}_controller.put(
+    "/edit",
+    dependencies=[Depends(CheckUserInterfacePermit("{{ moduleName }}:{{ businessName }}:edit"))],
+    response_model=ResponseType[Empty],
+)
+@SystemLog(title="{{ functionName }}", business_type=SysConst.BusinessType.UPDATE)
+async def update_{{ className }}(
+    {{ className }}_dto: {{ ClassName }}UpdateDTO,
+    query_db: AsyncSession = Depends(get_db),
+):
+    """更新{{ functionName }}"""
+    await {{ ClassName }}Service.update_{{ className }}(query_db, {{ className }}_dto)
+    return ResponseUtil.success(msg="更新成功")
+
+
+@{{ className }}_controller.delete(
+    "/{{{pkColumn.pythonField}}s}",
+    dependencies=[Depends(CheckUserInterfacePermit("{{ moduleName }}:{{ businessName }}:remove"))],
+    response_model=ResponseType[Empty],
+)
+@SystemLog(title="{{ functionName }}", business_type=SysConst.BusinessType.DELETE)
+async def delete_{{ className }}(
+    {{ pkColumn.pythonField }}s: str = Path(pattern="^[0-9,]+$", description="{{ pkColumn.columnComment }}，多个以逗号分隔"),
+    query_db: AsyncSession = Depends(get_db),
+):
+    """删除{{ functionName }}（支持批量删除）"""
+    delete_ids = [
+        {% if pkColumn.pythonType == 'int' %}
+        int({{ pkColumn.pythonField }})
+        {% elif pkColumn.pythonType == 'str' %}
+        {{ pkColumn.pythonField }}
+        {% else %}
+        {{ pkColumn.pythonType }}({{ pkColumn.pythonField }})
+        {% endif %}
+        for {{ pkColumn.pythonField }} in {{ pkColumn.pythonField }}s.split(",")
+    ]
+    await {{ ClassName }}Service.delete_{{ className }}(query_db, delete_ids)
+    return ResponseUtil.success(msg="删除成功")

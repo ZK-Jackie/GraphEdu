@@ -1,0 +1,192 @@
+"""{{ functionName }} Mapper 层
+
+职责：
+1. 只处理ORM数据或基础数据类型（dict）
+2. 不引入PO、DTO、VO等业务模型
+3. 提供纯粹的数据访问接口
+4. 支持树表结构查询（父节点、子节点、has_children 标记）
+"""
+
+from collections.abc import Sequence
+import logging
+
+from sqlalchemy import delete, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from graphedu.common.models.dto.{{ businessName }} import {{ ClassName }}QueryDTO
+from graphedu.common.models.orm import {{ ClassName }}Tree
+
+logger = logging.getLogger(__name__)
+
+
+class {{ ClassName }}Mapper:
+    """{{ functionName }}数据访问层（树表）"""
+
+    @staticmethod
+    async def get_{{ className }}_list(
+        query_params: {{ ClassName }}QueryDTO,
+        db_session: AsyncSession,
+    ) -> tuple[Sequence[{{ ClassName }}Tree], int]:
+        """获取{{ functionName }}列表（分页）
+
+        :param query_params: 查询参数DTO
+        :param db_session: 数据库会话
+        :return: {{ functionName }}列表和总数
+        """
+        # 构建查询语句
+        stmt = select({{ ClassName }}Tree)
+
+        # 添加过滤条件
+        {% for column in columns if column.query == '1' and column.pythonField not in ['createTime', 'updateTime'] %}
+        if query_params.{{ column.pythonField }}{% if column.pythonType == 'str' %} is not None{% endif %}:
+            {% if column.queryType == 'LIKE' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }}.like(f"%{query_params.{{ column.pythonField }}}%"))
+            {% elif column.queryType == 'EQ' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} == query_params.{{ column.pythonField }})
+            {% elif column.queryType == 'NE' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} != query_params.{{ column.pythonField }})
+            {% elif column.queryType == 'GT' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} > query_params.{{ column.pythonField }})
+            {% elif column.queryType == 'GTE' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} >= query_params.{{ column.pythonField }})
+            {% elif column.queryType == 'LT' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} < query_params.{{ column.pythonField }})
+            {% elif column.queryType == 'LTE' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} <= query_params.{{ column.pythonField }})
+            {% elif column.queryType == 'BETWEEN' %}
+            stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }}.between(query_params.{{ column.pythonField }}_start, query_params.{{ column.pythonField }}_end))
+            {% endif %}
+        {% endfor %}
+
+        # 获取总数
+        total_query = select(func.count()).select_from(stmt.subquery())
+        total_result = await db_session.execute(total_query)
+        total = total_result.scalar()
+
+        # 分页
+        page_num = query_params.page
+        page_size = query_params.size
+        if page_num and page_size:
+            stmt = stmt.offset((page_num - 1) * page_size).limit(page_size)
+
+        result = await db_session.execute(stmt)
+        return result.scalars().all(), total
+
+    @staticmethod
+    async def get_{{ className }}_children(
+        {% if treeParentCode %}
+        parent_id: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% else %}{{ pkColumn.pythonType }}{% endif %},
+        {% endif %}
+        query_params: {{ ClassName }}QueryDTO | None,
+        db_session: AsyncSession,
+    ) -> Sequence[{{ ClassName }}Tree]:
+        """获取{{ functionName }}子节点列表（用于异步展开）
+
+        :param {% if treeParentCode %}parent_id: 父节点ID{% else %}query_params: 查询参数{% endif %}
+        :param query_params: 查询参数DTO（可选）
+        :param db_session: 数据库会话
+        :return: 子节点列表
+        """
+        stmt = select({{ ClassName }}Tree})
+        {% if treeParentCode %}
+        stmt = stmt.where({{ ClassName }}Tree.{{ treeParentCode }} == parent_id)
+        {% endif %}
+
+        # 应用额外的查询条件
+        if query_params:
+            {% for column in columns if column.query == '1' and column.pythonField not in [treeParentCode, 'createTime', 'updateTime'] %}
+            if query_params.{{ column.pythonField }}{% if column.pythonType == 'str' %} is not None{% endif %}:
+                {% if column.queryType == 'LIKE' %}
+                stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }}.like(f"%{query_params.{{ column.pythonField }}}%"))
+                {% elif column.queryType == 'EQ' %}
+                stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} == query_params.{{ column.pythonField }})
+                {% elif column.queryType == 'NE' %}
+                stmt = stmt.where({{ ClassName }}Tree.{{ column.pythonField }} != query_params.{{ column.pythonField }})
+                {% endif %}
+            {% endfor %}
+
+        # 排序
+        stmt = stmt.order_by({{ ClassName }}Tree.{{ treeName or pkColumn.pythonField }})
+
+        result = await db_session.execute(stmt)
+        return result.scalars().all()
+
+    @staticmethod
+    async def has_children(
+        {% if treeParentCode %}
+        parent_id: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% else %}{{ pkColumn.pythonType }}{% endif %},
+        {% endif %}
+        db_session: AsyncSession,
+    ) -> bool:
+        """检查{{ functionName }}是否有子节点
+
+        :param {% if treeParentCode %}parent_id: 父节点ID{% else %}db_session: 数据库会话{% endif %}
+        :param db_session: 数据库会话
+        :return: True表示有子节点，False表示没有
+        """
+        {% if treeParentCode %}
+        result = await db_session.execute(
+            select(func.count({{ ClassName }}Tree.{{ pkColumn.pythonField }}))
+            .where({{ ClassName }}Tree.{{ treeParentCode }} == parent_id)
+        )
+        {% else %}
+        result = await db_session.execute(
+            select(func.count({{ ClassName }}Tree.{{ pkColumn.pythonField }}))
+        )
+        {% endif %}
+        count = result.scalar()
+        return (count or 0) > 0
+
+    @staticmethod
+    async def get_by_id(
+        {{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% elif pkColumn.pythonType == 'datetime' %}datetime{% else %}{{ pkColumn.pythonType }}{% endif %},
+        db_session: AsyncSession,
+    ) -> {{ ClassName }}Tree | None:
+        """根据ID获取{{ functionName }}
+
+        :param {{ pkColumn.pythonField }}: {{ pkColumn.columnComment }}
+        :param db_session: 数据库会话
+        :return: {{ functionName }} ORM 对象
+        """
+        stmt = select({{ ClassName }}Tree).where({{ ClassName }}Tree.{{ pkColumn.pythonField }} == {{ pkColumn.pythonField }})
+        result = await db_session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    @staticmethod
+    async def add_{{ className }}(
+        {{ className }}: {{ ClassName }}Tree,
+        db_session: AsyncSession,
+    ) -> None:
+        """新增{{ functionName }}
+
+        :param {{ className }}: {{ functionName }} ORM 对象
+        :param db_session: 数据库会话
+        """
+        db_session.add({{ className }})
+        await db_session.flush()
+
+    @staticmethod
+    async def update_{{ className }}(
+        {{ className }}: {{ ClassName }}Tree,
+        db_session: AsyncSession,
+    ) -> None:
+        """更新{{ functionName }}
+
+        :param {{ className }}: {{ functionName }} ORM 对象
+        :param db_session: 数据库会话
+        """
+        db_session.add({{ className }})
+        await db_session.flush()
+
+    @staticmethod
+    async def delete_{{ className }}(
+        {{ pkColumn.pythonField }}: {% if pkColumn.pythonType == 'int' %}int{% elif pkColumn.pythonType == 'str' %}str{% elif pkColumn.pythonType == 'datetime' %}datetime{% else %}{{ pkColumn.pythonType }}{% endif %},
+        db_session: AsyncSession,
+    ) -> None:
+        """删除{{ functionName }}
+
+        :param {{ pkColumn.pythonField }}: {{ pkColumn.columnComment }}
+        :param db_session: 数据库会话
+        """
+        await db_session.execute(delete({{ ClassName }}Tree).where({{ ClassName }}Tree.{{ pkColumn.pythonField }} == {{ pkColumn.pythonField }}))
+        await db_session.flush()

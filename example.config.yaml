@@ -1,0 +1,237 @@
+# ============================================
+# 部署配置
+# ============================================
+deploy:
+  profiles:
+    - postgres    # 注释此行 → 使用外部 PostgreSQL
+    - redis       # 注释此行 → 使用外部 Redis
+    - backend
+    - frontend
+  # Docker 镜像版本（留空使用默认值；生产环境建议 pin 到具体版本）
+  images:
+    postgres: '18.3.0'
+    redis: '8.6.2-alpine'
+    backend: '0.1.0'
+    frontend: '0.1.0'
+
+# ============================================
+# 应用元数据
+# ============================================
+app:
+  name: 'GraphEdu'
+  version: '0.1.0'
+  author: 'ZK-Jackie'
+  repository: 'http://github.com/ZK-Jackie/GraphEdu'
+
+# ============================================
+# GraphEdu 配置模板
+# ============================================
+# 复制此文件为 dev.config.yaml 或 prod.config.yaml，并填写实际配置值
+
+# 高频配置锚点（在最外层定义，方便引用）
+_llm_common: &zai_llm
+  name: 'glm-4.7'
+  api_base: 'https://open.bigmodel.cn/api/paas/v4'
+  temperature: 0.1
+  max_tokens: 131071
+  top_p: 0.9
+  api_key: 'your_zhipu_api_key_here'
+  concur_limit: 2
+
+_zai_embed: &zai_embed
+  name: 'embedding-3'
+  api_base: 'https://open.bigmodel.cn/api/paas/v4'
+  concur_limit: 50
+  max_tokens: 8192
+  api_key: 'your_zhipu_api_key_here'
+  batch_size: 64
+  batch_max_tokens: 196608
+
+_embed_common: &aliyun_embed
+  name: 'text-embedding-v4'
+  api_base: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+  concur_limit: 50
+  max_tokens: 8192
+  api_key: 'your_dashscope_api_key_here'
+  batch_size: 10
+  batch_max_tokens: 81920
+
+# ============================================
+# AI 模型配置
+# ============================================
+model:
+  chat:
+    <<: *zai_llm
+  think:
+    <<: *zai_llm
+    concur_limit: 1
+    extra_body:
+      thinking:
+        type: enabled
+
+  long:
+    <<: *zai_llm
+    name: 'glm-4-long'
+
+  embeddings:
+    <<: *zai_embed
+    dimensions: 1024
+
+# ============================================
+# 数据源配置
+# ============================================
+datasource:
+  postgresql:
+    dsn: 'postgresql://your_username:your_password@localhost:5432/graphedu?client_encoding=utf8'
+    echo: true
+    pool:
+      echo_pool: true
+      pool_size: 50
+      pool_recycle: 1800
+      pool_timeout: 30
+      pool_pre_ping: true
+      pool_reset_on_return: 'rollback'
+      pool_use_lifo: true
+  age:
+    visualized_graph_name: 'edu_visualized_graph'
+    graphrag_graph_name: 'graphrag'
+
+  redis:
+    dsn: 'redis://your_username:your_password@localhost:6379/0?max_connections=50&socket_keepalive=true&socket_connect_timeout=5&socket_timeout=5&retry_on_timeout=1&health_check_interval=30&decode_responses=true'
+
+  oss:
+    provider: aliyun
+    endpoint: 'https://oss-cn-your-region.aliyuncs.com'
+    access_key: 'your_aliyun_access_key'
+    secret_key: 'your_aliyun_secret_key'
+    bucket: your_bucket_name
+    upload_from: '/tmp/graphedu'
+    download_to: '/tmp/graphedu'
+
+# ============================================
+# 安全配置
+# ============================================
+security:
+  login:
+    single_end: true
+    captcha: true
+
+  token:
+    header: 'authorization'
+    secret: 'your_jwt_secret_key_at_least_64_characters_long_for_hs512'
+    expire: 14400
+    algorithm: 'HS512'
+
+  turnstile:
+    secret: 'your_cloudflare_turnstile_secret'
+    verify_url: 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+    timeout: 10.0
+
+# ============================================
+# AI Agent 配置
+# ============================================
+agent:
+  checkpoint_provider: 'postgresql'
+  dsn: 'postgresql://your_username:your_password@localhost:5432/graphedu?client_encoding=utf8&connect_timeout=50&sslmode=disable'
+  checkpoint_collection_name: 'chat_checkpoints'
+  writes_collection_name: 'chat_checkpoint_writes'
+
+# ============================================
+# 日志配置
+# ============================================
+logging:
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    standard:
+      format: '%(asctime)s.%(msecs)03d - %(levelname)-7s - %(name)-30s - %(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: standard
+      stream: ext://sys.stdout
+    daily_file:
+      class: graphedu.common.utils.logger.TimeLoggerRolloverHandler
+      level: DEBUG
+      formatter: standard
+      filename: ./data/logs/graphedu.debug.log
+      when: midnight
+      interval: 1
+      backupCount: 30
+      encoding: utf8
+      delay: false
+    feishu_webhook:
+      class: graphedu.common.utils.logger.FeishuWebhookHandler
+      level: ERROR
+      formatter: standard
+      url: 'https://open.feishu.cn/open-apis/bot/v2/hook/your_webhook_id'
+      sign_secret: your_feishu_sign_secret
+      timeout: 5
+      retries: 3
+  root:
+    level: DEBUG
+    handlers: [ 'console', 'daily_file', 'feishu_webhook' ]
+
+# ============================================
+# 系统配置
+# ============================================
+system:
+  timezone: UTC
+  location_query: true
+
+# ============================================
+# 调度器配置
+# ============================================
+scheduler:
+  restore_on_startup: true      # 启动时从数据库恢复已有的启用任务
+  timezone: "Asia/Shanghai"     # 调度器时区
+  misfire_grace_time_default: 60  # 策略2（执行一次）的默认宽限时间（秒）
+
+# ============================================
+# Celery Worker 配置
+# ============================================
+celery:
+  broker_url: 'redis://your_username:your_password@localhost:6379/1'
+  result_backend: 'redis://your_username:your_password@localhost:6379/2'
+  # task_soft_time_limit: 3000              # 软超时（秒），触发异常让任务优雅退出
+  # result_expires: 86400                   # 结果保留 24 小时
+  # redis_max_connections: 5                # Redis 连接池大小
+  # redis_backend_health_check_interval: 20 # 健康检查间隔（秒）
+  # beat_sync_embeddings_interval: 3600     # 嵌入同步间隔（秒）
+
+# ============================================
+# MinerU API 配置
+# ============================================
+mineru:
+  base_url: 'https://your-mineru-domain.com:8888'
+
+# ============================================
+# GraphRAG 配置
+# ============================================
+graphrag:
+  working_dir: 'data/graphrag'
+  prompt_repo_dir: 'graphedu/services/external/graphrag_prompt_template'
+  method: 'standard'
+  llm:
+    <<: *zai_llm
+    name: 'glm-4.5'
+    concur_limit: 10
+    max_tokens: 98304
+  embeddings:
+    <<: *zai_embed
+    dimensions: 1024
+
+# ============================================
+# Dify 配置
+# ============================================
+dify:
+  base_url: 'https://your-dify-domain.com/v1'
+  workflows:
+    exercise_generation:
+      id: ''
+      api_key: 'your_dify_exercise_gen_api_key'
+    teacher_exercise_generation:
+      id: ''
+      api_key: 'your_dify_teacher_exercise_gen_api_key'

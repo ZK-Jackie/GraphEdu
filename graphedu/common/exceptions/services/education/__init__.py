@@ -1,0 +1,223 @@
+"""教育模块异常
+
+包含教育管理相关的所有异常定义。
+"""
+
+from graphedu.common.exceptions.services.education.chapter import (
+    ChapterChangeStatusFailedException,
+    ChapterCreateFailedException,
+    ChapterDeleteFailedException,
+    ChapterException,
+    ChapterHasChildrenException,
+    ChapterIdListEmptyException,
+    ChapterLoopException,
+    ChapterNameAlreadyExistsException,
+    ChapterNoPermissionException,
+    ChapterNotFoundException,
+    ChapterUpdateFailedException,
+)
+from graphedu.common.exceptions.services.education.chapter_resource import (
+    ChapterResourceChangeStatusFailedException as ChapterContentChangeStatusFailedException,
+    ChapterResourceCreateFailedException as ChapterContentCreateFailedException,
+    ChapterResourceDeleteFailedException as ChapterContentDeleteFailedException,
+    ChapterResourceException as ChapterContentException,
+    ChapterResourceIdListEmptyException as ChapterContentIdListEmptyException,
+    ChapterResourceNotFoundException as ChapterContentNotFoundException,
+    ChapterResourceUpdateFailedException as ChapterContentUpdateFailedException,
+)
+from graphedu.common.exceptions.services.education.chat_session import (
+    ChatAgentNotInitializedException,
+    ChatMessageSendException,
+    ChatSessionAccessDeniedException,
+    ChatSessionCreateException,
+    ChatSessionCreateFailedException,
+    ChatSessionException,
+    ChatSessionNotFoundException,
+)
+from graphedu.common.exceptions.services.education.course import (
+    CourseCodeAlreadyExistsException,
+    CourseException,
+    CourseIdListEmptyException,
+    CourseNoPermissionException,
+    CourseNotFoundException,
+)
+from graphedu.common.exceptions.services.education.course_exercise import (
+    CourseExerciseChangeStatusFailedException,
+    CourseExerciseCreateFailedException,
+    CourseExerciseDeleteFailedException,
+    CourseExerciseException,
+    CourseExerciseIdListEmptyException,
+    CourseExerciseNotFoundException,
+    CourseExerciseUpdateFailedException,
+)
+from graphedu.common.exceptions.services.education.exercise_attempt import (
+    ExerciseAttemptCreateFailedException,
+    ExerciseAttemptException,
+    ExerciseAttemptExerciseNotFoundException,
+    ExerciseAttemptNotFoundException,
+)
+from graphedu.common.exceptions.services.education.external import (
+    ExternalServiceException,
+    GraphRAGException,
+    MinerUApiException,
+)
+from graphedu.common.exceptions.services.education.graphrag_task import (
+    GraphRAGBuildCourseNotFoundException,
+    GraphRAGBuildResourceNotTextedException,
+    GraphRAGBuildTaskCannotCancelException,
+    GraphRAGTaskException,
+    GraphRAGTaskIdListEmptyException,
+    GraphRAGTaskNotFoundException,
+)
+from graphedu.common.exceptions.services.education.knowledge_graph import (
+    KnowledgeGraphAlreadyExistsException,
+    KnowledgeGraphChangeStatusFailedException,
+    KnowledgeGraphCreateFailedException,
+    KnowledgeGraphDeleteFailedException,
+    KnowledgeGraphException,
+    KnowledgeGraphIdListEmptyException,
+    KnowledgeGraphNameAlreadyExistsException,
+    KnowledgeGraphNoPermissionException,
+    KnowledgeGraphNotFoundException,
+    KnowledgeGraphUpdateFailedException,
+)
+from graphedu.common.exceptions.services.education.student import (
+    StudentCreateFailedException,
+    StudentDeleteFailedException,
+    StudentException,
+    StudentIdListEmptyException,
+    StudentNoAlreadyExistsException,
+    StudentNoPermissionException,
+    StudentNotFoundException,
+    StudentUpdateFailedException,
+    StudentUserNotFoundException,
+)
+from graphedu.common.exceptions.services.education.student_course import (
+    CourseNotAvailableException,
+    StudentCourseAlreadyExistsException,
+    StudentCourseException,
+    StudentCourseNotFoundException,
+)
+from graphedu.common.exceptions.services.education.syllabus_graph import (
+    KnowledgeNodeCreateFailedException,
+    KnowledgeNodeNotFoundException,
+    KnowledgeRelationshipCreateFailedException,
+    KnowledgeRelationshipNotFoundException,
+    SyllabusGraphException,
+)
+from graphedu.common.exceptions.services.education.teacher import (
+    TeacherAlreadyExistsException,
+    TeacherChangeStatusFailedException,
+    TeacherCreateFailedException,
+    TeacherDeleteFailedException,
+    TeacherException,
+    TeacherIdListEmptyException,
+    TeacherMaxStudentCountExceededException,
+    TeacherNoAlreadyExistsException,
+    TeacherNoPermissionException,
+    TeacherNotFoundException,
+    TeacherUpdateFailedException,
+    TeacherUserNotFoundException,
+)
+
+__all__ = [
+    "ChapterChangeStatusFailedException",
+    "ChapterContentChangeStatusFailedException",
+    "ChapterContentCreateFailedException",
+    "ChapterContentDeleteFailedException",
+    "ChapterContentException",
+    "ChapterContentIdListEmptyException",
+    "ChapterContentNotFoundException",
+    "ChapterContentUpdateFailedException",
+    "ChapterCreateFailedException",
+    "ChapterDeleteFailedException",
+    "ChapterException",
+    "ChapterHasChildrenException",
+    "ChapterIdListEmptyException",
+    "ChapterLoopException",
+    "ChapterNameAlreadyExistsException",
+    "ChapterNoPermissionException",
+    "ChapterNotFoundException",
+    "ChapterUpdateFailedException",
+    "ChatAgentNotInitializedException",
+    "ChatMessageSendException",
+    "ChatSessionAccessDeniedException",
+    "ChatSessionCreateException",
+    "ChatSessionCreateFailedException",
+    "ChatSessionException",
+    "ChatSessionNotFoundException",
+    # 课程异常
+    "CourseCodeAlreadyExistsException",
+    "CourseException",
+    "CourseExerciseChangeStatusFailedException",
+    "CourseExerciseCreateFailedException",
+    "CourseExerciseDeleteFailedException",
+    "CourseExerciseException",
+    "CourseExerciseIdListEmptyException",
+    "CourseExerciseNotFoundException",
+    "CourseExerciseUpdateFailedException",
+    "CourseIdListEmptyException",
+    "CourseNoPermissionException",
+    "CourseNotAvailableException",
+    "CourseNotFoundException",
+    # 作答记录异常
+    "ExerciseAttemptCreateFailedException",
+    "ExerciseAttemptException",
+    "ExerciseAttemptExerciseNotFoundException",
+    "ExerciseAttemptNotFoundException",
+    # 外部服务异常
+    "ExternalServiceException",
+    # GraphRAG 构建异常
+    "GraphRAGBuildCourseNotFoundException",
+    "GraphRAGBuildResourceNotTextedException",
+    "GraphRAGBuildTaskCannotCancelException",
+    "GraphRAGException",
+    # GraphRAG 任务异常
+    "GraphRAGTaskException",
+    "GraphRAGTaskIdListEmptyException",
+    "GraphRAGTaskNotFoundException",
+    # 知识图谱异常
+    "KnowledgeGraphAlreadyExistsException",
+    "KnowledgeGraphChangeStatusFailedException",
+    "KnowledgeGraphCreateFailedException",
+    "KnowledgeGraphDeleteFailedException",
+    "KnowledgeGraphException",
+    "KnowledgeGraphIdListEmptyException",
+    "KnowledgeGraphNameAlreadyExistsException",
+    "KnowledgeGraphNoPermissionException",
+    "KnowledgeGraphNotFoundException",
+    "KnowledgeGraphUpdateFailedException",
+    # 大纲图谱异常
+    "KnowledgeNodeCreateFailedException",
+    "KnowledgeNodeNotFoundException",
+    "KnowledgeRelationshipCreateFailedException",
+    "KnowledgeRelationshipNotFoundException",
+    "MinerUApiException",
+    # 学生异常
+    "StudentCourseAlreadyExistsException",
+    "StudentCourseException",
+    "StudentCourseNotFoundException",
+    "StudentCreateFailedException",
+    "StudentDeleteFailedException",
+    "StudentException",
+    "StudentIdListEmptyException",
+    "StudentNoAlreadyExistsException",
+    "StudentNoPermissionException",
+    "StudentNotFoundException",
+    "StudentUpdateFailedException",
+    "StudentUserNotFoundException",
+    "SyllabusGraphException",
+    # 教师异常
+    "TeacherAlreadyExistsException",
+    "TeacherChangeStatusFailedException",
+    "TeacherCreateFailedException",
+    "TeacherDeleteFailedException",
+    "TeacherException",
+    "TeacherIdListEmptyException",
+    "TeacherMaxStudentCountExceededException",
+    "TeacherNoAlreadyExistsException",
+    "TeacherNoPermissionException",
+    "TeacherNotFoundException",
+    "TeacherUpdateFailedException",
+    "TeacherUserNotFoundException",
+]

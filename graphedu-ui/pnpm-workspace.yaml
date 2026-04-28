@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - core-js
+  - esbuild
+  - vue-demi
+  - '@vue-office/docx'
+  - '@vue-office/excel'
+  - '@vue-office/pptx'

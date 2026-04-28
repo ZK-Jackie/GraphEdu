@@ -1,0 +1,61 @@
+# 后端构建忽略文件（构建上下文：项目根目录）
+# BuildKit 自动识别同名的 Dockerfile.dockerignore
+
+# 前端文件（不需要）
+graphedu-ui/
+node_modules/
+
+# Docker 配置
+docker/
+
+# Python 缓存和虚拟环境
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.python-version
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# 数据和日志
+data/
+logs/
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 文档
+*.md
+docs/
+README.md
+LICENSE
+CLAUDE.md
+
+# 配置文件需要自行通过docker-compose.yaml挂载，避免泄露敏感信息
+*config.yaml
+.env
+.env.*
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Misc
+*.tmp
+*.bak
+.cache/

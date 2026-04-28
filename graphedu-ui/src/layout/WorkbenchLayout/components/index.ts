@@ -1,0 +1,5 @@
+export { default as WorkbenchHeader } from './WorkbenchHeader.vue'
+export { default as WorkbenchSider } from './WorkbenchSider.vue'
+export { default as WorkbenchContent } from './WorkbenchContent/index.vue'
+export { default as MobileMenuDrawer } from './MobileMenuDrawer.vue'
+export { default as MobileUserDrawer } from './MobileUserDrawer.vue'
