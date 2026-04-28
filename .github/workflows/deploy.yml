@@ -2,7 +2,27 @@ name: Auto Deployment
 on:
   push:
     branches:
-      - main
+      - master
+    paths-ignore:
+      - '**.md'
+      - '**/docs/**'
+      - '**/tests/**'
+      - '**.test.*'
+      - '**.spec.*'
+      - 'graphedu-ui/e2e/**'
+      - 'graphedu-ui/playwright.config.ts'
+      - 'graphedu-ui/vitest.config.*'
+      - 'graphedu-ui/tsconfig.vitest.json'
+      - 'graphedu-ui/.*rc.*'
+      - 'graphedu-ui/.env.*'
+      - 'graphedu-ui/.npmrc'
+      - 'graphedu-ui/pnpm-workspace.yaml'
+      - '.claude/**'
+      - 'scripts/**'
+      - '**/.*ignore'
+      - '.python-version'
+      - 'example.config.yaml'
+      - 'LICENSE*'
 
 jobs:
   deploy:
@@ -52,7 +72,7 @@ jobs:
               exit 1
             fi
             cd "$DEPLOY_PATH"
-            git pull origin main
+            git pull origin master
             cd docker
             docker compose build --pull
             docker compose up -d --remove-orphans
