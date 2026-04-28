@@ -1,296 +1,286 @@
+<div align="center">
+
 # GraphEdu
 
-> 基于知识图谱的教育平台 —— 智能化学习管理与内容生成系统
+**基于知识图谱的智能教育平台**
 
-GraphEdu 是一个融合了知识图谱技术、AI 内容生成和现代化前端交互的教育平台。系统采用前后端分离架构，提供学生学习、课程管理、知识图谱可视化等核心功能。
+[![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.128+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1.0-purple)](https://github.com/langchain-ai/langgraph)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-## 项目简介
+融合知识图谱可视化、AI 智能问答、PDF 深度阅读的新一代教育平台。采用前后端分离架构，提供从课程管理到个性化学习路径的完整解决方案。
 
-GraphEdu 旨在通过知识图谱技术提升学习体验，主要特色包括：
+</div>
 
-- **知识图谱驱动**：基于 Neo4j 构建课程知识图谱，可视化知识关联
-- **AI 内容生成**：集成 LangChain/LangGraph，支持智能问答和内容生成
-- **现代化交互**：Vue 3 + Ant Design Vue 构建响应式前端界面
-- **PDF 智能解析**：基于 pdfjs-dist 的 PDF 阅读器，支持文本选中和标注
-- **多角色权限**：学生/教师双角色视图，动态路由与菜单系统
-- **实时通信**：WebSocket 支持的实时聊天和协作功能
+---
+
+## 项目亮点
+
+| | | | |
+|:---|:---|:---|:---|
+| **知识图谱驱动** | Apache AGE 图存储 + pgvector 语义检索，Neo4j NVL 交互式可视化 | **AI 智能助手** | LangGraph Agent 多源 RAG（图谱 + 向量 + 联网），MCP 工具集成，WebSocket 流式响应 |
+| **PDF 智能阅读** | pdfjs-dist 多层渲染：HiDPI Canvas + 文本选中 + 标注，虚拟滚动优化 | **多角色动态路由** | 学生 / 教师双视图，4 场景路由（web / admin / userInfo / mobile），三级权限安全 |
+| **学习分析** | 掌握度追踪，拓扑排序学习路径，自动出题评估，教学数据看板 | | |
+
+---
+
+## 系统架构
+
+```mermaid
+graph TB
+    subgraph Client["客户端"]
+        Browser["Browser"]
+    end
+
+    subgraph Frontend["graphedu-ui — Vue 3.5"]
+        direction LR
+        Views["Views 页面"] --> Stores["Pinia 状态"]
+        Stores --> API["API 请求层"]
+    end
+
+    Nginx["Nginx 反向代理"]
+
+    subgraph Backend["graphedu — FastAPI"]
+        Controller["Controller 层"] --> Service["Service 层"] --> Mapper["Mapper 层"]
+    end
+
+    subgraph AI["AI 能力层"]
+        Agent["LangGraph Agent"]
+        GraphRAG["GraphRAG 流水线"]
+        Celery["Celery Workers"]
+    end
+
+    subgraph Data["数据层"]
+        PG["PostgreSQL\nApache AGE + pgvector"]
+        Redis["Redis"]
+        OSS["S3 对象存储"]
+    end
+
+    Browser --> Nginx
+    Nginx --> Frontend
+    Nginx --> Backend
+    Frontend -->|REST API| Backend
+    Service --> AI
+    Mapper --> Data
+
+    classDef client fill:#e8f5e9,stroke:#43a047
+    classDef frontend fill:#e3f2fd,stroke:#1e88e5
+    classDef backend fill:#fff3e0,stroke:#fb8c00
+    classDef ai fill:#f3e5f5,stroke:#8e24aa
+    classDef data fill:#fce4ec,stroke:#e53935
+
+    class Client client
+    class Frontend frontend
+    class Backend backend
+    class AI ai
+    class Data data
+```
+
+---
+
+## 核心功能
+
+### 动态路由与权限系统
+
+登录后按场景动态加载菜单与路由，实现学生、管理员等不同角色的差异化视图。
+
+```mermaid
+flowchart TD
+    A["用户登录"] --> B["JWT Token"]
+    B --> C["GET /info\n获取权限与角色"]
+    C --> D["GET /menus?scene=xxx\n按场景获取菜单"]
+    D --> E{"场景类型"}
+    E -->|web| F["学生学习视图"]
+    E -->|admin| G["后台管理视图"]
+    E -->|userInfo| H["个人中心视图"]
+    E -->|mobile| I["移动端（预留）"]
+    F & G & H & I --> J["router.addRoute()\n动态注册路由"]
+    J --> K["渲染布局与页面组件"]
+
+    style A fill:#e3f2fd,stroke:#1e88e5
+    style K fill:#e8f5e9,stroke:#43a047
+```
+
+### 知识图谱构建与可视化
+
+从课程资料自动抽取实体与关系，构建知识图谱并支持交互式探索。
+
+```mermaid
+flowchart LR
+    A["课程资料\n章节/文档"] --> B["NLP Pipeline\n实体/关系抽取"]
+    B --> C["Apache AGE\n图数据存储"]
+    C --> D["Neo4j NVL\n交互式可视化"]
+    D --> E["知识图谱浏览器\n搜索/展开/导航"]
+    C --> F["pgvector\n语义嵌入"]
+    F --> G["GraphRAG 检索"]
+
+    style A fill:#fff3e0,stroke:#fb8c00
+    style E fill:#e8f5e9,stroke:#43a047
+    style G fill:#f3e5f5,stroke:#8e24aa
+```
+
+### AI 智能问答
+
+LangGraph Agent 驱动的多源检索增强生成，支持图谱查询、文档检索、联网搜索、出题和路径规划。
+
+```mermaid
+flowchart TD
+    A["用户提问"] --> B["LangGraph Agent"]
+    B --> C{"路由决策"}
+
+    C -->|知识查询| D["MCP: 图谱查询\nApache AGE"]
+    C -->|文档检索| E["MCP: GraphRAG\nlocal / global / drift"]
+    C -->|联网搜索| F["Web Search"]
+    C -->|出题| G["MCP: 出题 / 查题"]
+    C -->|学习路径| H["MCP: 路径生成\n拓扑排序"]
+
+    D & E & F & G & H --> I["上下文汇总"]
+    I --> J["LLM 响应生成"]
+    J --> K{"评估触发"}
+    K -->|自动评估| L["Celery: AssessSession\n关键词提取 → 知识检索 → 掌握度评估"]
+    K -->|直接响应| M["流式响应\nWebSocket / SSE"]
+    L --> M
+
+    style B fill:#f3e5f5,stroke:#8e24aa
+    style M fill:#e8f5e9,stroke:#43a047
+    style L fill:#e0f2f1,stroke:#00897b
+```
+
+### 后端分层架构
+
+严格三层分离，每层职责明确，通过 Pydantic 模型约束层间数据流转。
+
+```mermaid
+flowchart LR
+    A["Request"] --> B["Controller\napi/services/\nHTTP 处理与验证"]
+    B --> C["Service\nservices/\n业务逻辑"]
+    C --> D["Mapper\nmapper/\n数据访问"]
+    D --> E[("PostgreSQL")]
+
+    B -.->|"DTO 请求"| C
+    C -.->|"BO 业务"| D
+    D -.->|"ORM 实体"| E
+    C -.->|"VO 响应"| B
+
+    style A fill:#e3f2fd,stroke:#1e88e5
+    style B fill:#fff3e0,stroke:#fb8c00
+    style C fill:#e8f5e9,stroke:#43a047
+    style D fill:#fce4ec,stroke:#e53935
+```
+
+---
 
 ## 技术栈
 
-### 后端
-- **框架**：FastAPI + SQLAlchemy 2.0（异步）
-- **数据库**：PostgreSQL + pgvector + Redis
-- **AI 引擎**：LangChain / LangGraph
-- **任务队列**：Celery + Redis
-- **对象存储**：MinIO / 阿里云 OSS
-- **开发工具**：uv（包管理）+ Ruff（代码检查）+ pytest（测试）
+| 后端 | 前端 | 基础设施 |
+|:---|:---|:---|
+| **框架**: FastAPI + SQLAlchemy 2.0（异步） | **框架**: Vue 3.5 + TypeScript 5.9 + Vite 8 | **容器**: Docker Compose |
+| **数据库**: PostgreSQL + pgvector | **UI**: Ant Design Vue 4.2 + Tailwind CSS 4.1 | **包管理**: uv + pnpm |
+| **图存储**: Apache AGE | **状态**: Pinia 3 / vue-i18n 11.3 | **对象存储**: S3 兼容（阿里云 OSS 等） |
+| **AI**: LangChain + LangGraph + GraphRAG | **PDF**: pdfjs-dist 5.6 | **代码质量**: Ruff + oxlint |
+| **任务队列**: Celery + Redis | **图可视化**: Neo4j NVL | **测试**: pytest + Vitest + Playwright |
+| **缓存**: Redis | **图表**: ECharts 6 | **CI/CD**: GitHub Actions |
 
-### 前端
-- **框架**：Vue 3.5 + TypeScript 5.9 + Vite 7
-- **UI 组件**：Ant Design Vue 4.2 + Tailwind CSS 4.1
-- **状态管理**：Pinia 3
-- **路由**：Vue Router 4.6（动态路由系统）
-- **PDF 渲染**：pdfjs-dist 5.6
-- **图可视化**：Cytoscape.js + Neo4j
-- **测试**：Vitest + Playwright
-
-## 关键模块
-
-### 后端架构（graphedu/）
-
-```
-graphedu/
-├── api/              # API 接口层（Controller）
-│   ├── services/     # 业务服务（系统/教育/AI代理）
-│   └── middleware/   # 中间件（CORS/日志/认证）
-├── services/         # 核心业务逻辑层（Service）
-├── mapper/           # 数据访问层（Mapper）
-├── common/           # 公共模块
-│   ├── models/       # ORM/DTO/VO 定义
-│   ├── config/       # 配置管理
-│   ├── exceptions/   # 异常体系
-│   └── resource/     # DB/Redis 客户端
-├── security/         # 安全模块（认证/权限）
-├── workers/          # Celery 后台任务
-├── mcp/              # MCP (Model Context Protocol) 集成
-└── cli/              # 命令行工具
-```
-
-### 前端架构（graphedu-ui/）
-
-```
-src/
-├── api/              # API 请求封装
-├── components/       # 公共组件
-│   ├── mineru/       # PDF/Markdown 查看器
-│   ├── dict/         # 字典组件
-│   └── VueGoldenLayout/ # Golden Layout 集成
-├── stores/           # Pinia 状态管理
-├── router/           # 路由配置（动态路由系统）
-├── views/            # 页面组件
-│   ├── course/       # 课程学习
-│   ├── admin/        # 后台管理
-│   └── profile/      # 个人中心
-└── utils/            # 工具函数
-```
-
-### 核心工作流程
-
-#### 1. 动态路由与权限系统
-
-```
-登录 → JWT Token
-  ↓
-GET /system/user/getInfo → 获取用户权限
-  ↓
-GET /system/function/router?scene=xxx → 按场景获取菜单
-  ↓
-前端动态注册路由 → 加载对应组件
-```
-
-支持多场景路由：
-- `web`：学生学习视图
-- `admin`：后台管理
-- `userInfo`：个人中心
-- `mobile`：移动端（预留）
-
-#### 2. 知识图谱构建与可视化
-
-```
-课程数据 → Pipeline 预处理
-  ↓
-提取实体/关系 → 存入 Neo4j
-  ↓
-前端 Cytoscape.js 可视化渲染
-  ↓
-交互式图谱探索与查询
-```
-
-#### 3. AI 问答与内容生成
-
-```
-用户提问 → LangGraph Agent
-  ↓
-检索增强生成（RAG）
-  ├─ 图谱检索（Apache AGE）
-  ├─ 文档检索（pgvector）
-  └─ 联网搜索（可选）
-  ↓
-流式响应 → WebSocket 推送
-```
-
-#### 4. PDF 智能阅读
-
-```
-PDF 文件 → pdfjs 渲染
-  ├─ Canvas 层：HiDPI 渲染
-  ├─ TextLayer：文本选中与复制
-  ├─ AnnotationLayer：bbox 标注显示
-  └─ 虚拟滚动：IntersectionObserver 优化
-```
+---
 
 ## 快速开始
 
 ### 环境要求
 
-- Python 3.13+
+- Python 3.12+
 - Node.js 20.19+ / 22.12+ / 24.9+
-- PostgreSQL 18+
-- Redis 8+
+- PostgreSQL（含 Apache AGE、pgvector 插件） + Redis
+- Docker & Docker Compose（部署用）
 
-### 后端启动
+### 开发
 
 ```bash
-# 安装依赖
-uv sync --extra service --extra test --extra dev
+# 克隆仓库
+git clone https://github.com/ZK-Jackie/GraphEdu.git
+cd GraphEdu
 
-# 配置文件
+# 后端配置
 cp example.config.yaml dev.config.yaml
-# 编辑 dev.config.yaml 配置数据库连接等
+# 编辑 dev.config.yaml，配置数据库、Redis、AI 模型 API Key 等
+vim dev.config.yaml
 
-# 启动开发服务
+# 后端启动
+uv sync --all-extras
 uv run -m graphedu service dev
 
-# 运行测试
-uv run -m graphedu test run
-
-# 代码检查
-uv run ruff check
-uv run ruff format
-```
-
-### 前端启动
-
-```bash
+# 前端配置
 cd graphedu-ui
+# 编辑 .env.development 配置 API 地址
+vim .env.development
 
-# 安装依赖
+# 前端启动
 pnpm install
-
-# 启动开发服务
 pnpm dev
-
-# 构建生产版本
-pnpm build
-
-# 代码检查
-pnpm lint:fix && pnpm format
 ```
 
-## 部署指南
+---
+
+## 部署
 
 ### Docker 部署（推荐）
 
 ```bash
-# 配置环境变量
-cp example.config.yaml dev.config.yaml
-# 编辑配置文件
+# 1. 克隆仓库到服务器
+git clone https://github.com/ZK-Jackie/GraphEdu.git /path/to/deploy
+cd /path/to/deploy
 
-# 生成 docker/.env
+# 2. 配置后端
+cp example.config.yaml prod.config.yaml
+# 编辑 prod.config.yaml，DSN 使用 Docker 服务名（如 graphedu-postgres:5432）
+vim prod.config.yaml
+
+# 3. 配置前端
+cd graphedu-ui
+cp .env.development .env.production
+# 编辑 .env.production 配置生产环境 API 地址
+vim .env.production
+cd ..
+
+# 4. 生成 Docker 环境变量
 uv run -m graphedu generate env --output docker/.env
 
-# 启动所有服务
+# 5. 构建并启动
 cd docker
-docker compose -f prod.docker-compose.yaml up -d --build
+docker compose up -d --build
 ```
 
 ### 手动部署
 
-1. **数据库初始化**：执行 SQL 脚本初始化 PostgreSQL
-2. **后端部署**：
-   ```bash
-   uv sync --extra service
-   uv run -m graphedu service prod
-   ```
-3. **前端部署**：
-   ```bash
-   cd graphedu-ui
-   pnpm build
-   # 将 dist/ 目录部署到 Web 服务器
-   ```
-
-详细部署文档见 [`docker/README.md`](docker/README.md)
-
-## 测试
-
 ```bash
-# 后端单元测试
-pytest tests/unit
+# 后端
+uv sync --all-extras
+cp example.config.yaml prod.config.yaml
+# 配置 prod.config.yaml （数据库 DSN、Token 密钥等）
+vim prod.config.yaml
+uv run -m graphedu service prod
 
-# 后端集成测试
-pytest tests/integration
+# 后端 celery worker
+uv run -m graphedu worker start
+# 后端 beat scheduler
+uv run -m graphedu beat start
 
-# 前端单元测试
-cd graphedu-ui && pnpm test:unit
-
-# 前端 E2E 测试
-cd graphedu-ui && pnpm test:e2e
+# 前端
+cd graphedu-ui
+cp .env.development .env.production
+# 编辑 .env.production 配置生产环境变量
+vim .env.production
+pnpm build
+# 将 dist/ 部署到 Nginx 等 Web 服务器
 ```
 
-详细测试文档见 [`tests/README.md`](tests/README.md)
-
-## 开发文档
-
-- **后端开发指南**：[`CLAUDE.md`](CLAUDE.md)
-- **前端开发指南**：[`graphedu-ui/CLAUDE.md`](graphedu-ui/CLAUDE.md)
-- **配置系统**：[`graphedu/common/config/README.md`](graphedu/common/config/README.md)
-- **异常处理**：[`graphedu/common/exceptions/README.md`](graphedu/common/exceptions/README.md)
-- **数据模型**：[`graphedu/common/models/README.md`](graphedu/common/models/README.md)
-
-## 项目特色
-
-### 分层架构
-
-严格的三层分离架构，确保代码可维护性：
-
-```
-Controller (API) → Service (业务逻辑) → Mapper (数据访问)
-```
-
-### 异步优先
-
-所有 IO 操作使用 async/await，充分利用异步性能优势。
-
-### 权限控制
-
-- **接口权限**：基于注解的接口级权限控制
-- **数据权限**：支持 5 种数据范围（全部/自定义/本部门/本部门及子部门/仅本人）
-- **动态路由**：根据用户权限动态加载菜单和路由
-
-### 代码生成
-
-内置 CRUD 代码生成器，一键生成完整的前后端代码：
-
-```bash
-uv run -m graphedu generate crud <table_name>
-```
-
-## 贡献指南
-
-欢迎贡献代码、报告问题或提出建议！
-
-1. Fork 项目
-2. 创建特性分支
-3. 提交更改
-4. 推送到分支
-5. 创建 Pull Request
-
-## 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
-## 致谢
-
-GraphEdu 的开发离不开以下开源项目：
-
-- [FastAPI](https://fastapi.tiangolo.com/) - 现代化的 Python Web 框架
-- [SQLAlchemy](https://www.sqlalchemy.org/) - Python SQL 工具包和 ORM
-- [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
-- [Ant Design Vue](https://antdv.com/) - Vue 3 UI 组件库
-- [pdfjs](https://mozilla.github.io/pdf.js/) - Mozilla PDF 渲染引擎
-- [LangChain](https://langchain.com/) - AI 应用开发框架
-- [Golden Layout](https://golden-layout.com/) - 布局管理器
+详细部署文档见 [`docker/README.md`](docker/README.md)。
 
 ---
 
-**Built with ❤️ for education**
+## 许可证
+
+[MIT](LICENSE)

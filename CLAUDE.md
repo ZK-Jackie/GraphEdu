@@ -182,7 +182,6 @@ model:                  # AI 模型配置（chat、think、long、embeddings）
 datasource:             # 数据源配置
   postgresql:          # PostgreSQL 连接和连接池
   redis:               # Redis 连接
-  neo4j:               # Neo4j 图数据库
   oss:                 # 对象存储（MinIO/阿里云）
 security:               # 安全配置
   token:               # JWT Token 配置
@@ -205,10 +204,10 @@ deploy:                 # 部署配置
 在开始开发前，确保以下配置已正确设置：
 
 - [ ] 复制 `example.config.yaml` 为 `dev.config.yaml`
-- [ ] 配置数据库连接（PostgreSQL、Redis、Neo4j）
+- [ ] 配置数据库连接（PostgreSQL、Redis）
 - [ ] 配置 AI 模型 API Key（智谱 GLM、阿里云等）
 - [ ] 配置 JWT 密钥（生产环境使用强密钥）
-- [ ] 配置对象存储（MinIO/阿里云 OSS）
+- [ ] 配置对象存储（s3）
 - [ ] 检查日志目录权限（`./data/logs/`）
 
 ## Docker 部署
