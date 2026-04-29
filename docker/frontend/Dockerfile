@@ -24,7 +24,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build-only
 
 # ========================================
-# 阶段 2: 运行时（官方 nginx:stable-alpine，轻量、无需手工编译）
+# 阶段 2: 运行时（官方 nginx:alpine，轻量）
+# SSL / Gzip / Brotli 等高级功能请在外层代理（宿主机 Nginx / Caddy / Traefik）中配置
 # ========================================
 FROM nginx:1.25.5-alpine
 
