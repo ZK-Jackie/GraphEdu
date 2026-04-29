@@ -50,7 +50,7 @@ graph TB
 
 ```
 docker/
-├── .env                          # 由 generate env 自动生成，手动编辑将在下次生成时被覆盖
+├── .env                          # 由 env-generator 服务自动生成，手动编辑将在下次生成时被覆盖
 ├── .gitignore                    # 忽略 dev.*、oss/、dify/、neo4j/
 ├── docker-compose.yaml           # 生产环境 Compose 配置
 │
@@ -116,10 +116,11 @@ docker/
 | worker | `worker` | `jackiey101/graphedu-backend`（共享镜像） | - | Celery Worker |
 | beat | `beat` | `jackiey101/graphedu-backend`（共享镜像） | - | Celery Beat 定时调度 |
 | frontend | `frontend` | `jackiey101/graphedu-frontend` | 11334→80（宿主机） | Nginx 网关 |
+| env-generator | `env-gen` | `jackiey101/graphedu-backend`（共享镜像） | - | 一次性生成 `.env`（运行后自动退出） |
 
 **补充说明**：
 
-- `backend`、`worker`、`beat` 共用 `docker/backend/Dockerfile` 构建的同一镜像，通过不同 `command` 区分
+- `backend`、`worker`、`beat`、`env-generator` 共用 `docker/backend/Dockerfile` 构建的同一镜像，通过不同 `command` 区分
 - 三个应用服务均以只读方式挂载 `../prod.config.yaml`
 - `depends_on` 使用 `required: false`，即使 postgres/redis 不在 Compose 中（使用外部数据库时），应用服务仍可正常启动
 - 所有服务配置了 `restart: unless-stopped` 和健康检查
@@ -142,7 +143,7 @@ deploy:
 
 ## 网络与端口
 
-所有服务连接到 `graphedu-network` 桥接网络，服务名即 hostname：
+所有服务连接到 `graphedu-network` 桥接网络，通过 **容器名**（如 `graphedu-postgres`）互相访问：
 
 ```yaml
 # prod.config.yaml 中 DSN 使用 Docker 服务名
@@ -164,7 +165,7 @@ datasource:
 
 ## 环境变量参考
 
-`docker/.env` 由 `uv run -m graphedu generate env` 自动生成，不建议手动编辑：
+`docker/.env` 由 `env-generator` 服务自动生成，不建议手动编辑：
 
 | 变量 | 说明 | docker-compose 默认值 |
 |------|------|---------------------|
@@ -178,7 +179,7 @@ datasource:
 | `BACKEND_VERSION` | Backend/Worker/Beat 镜像标签 | `latest` |
 | `FRONTEND_VERSION` | Frontend 镜像标签 | `latest` |
 
-> 实际值从 `prod.config.yaml` 的 `datasource.postgresql.dsn` 和 `deploy.images` 中提取，`generate env` 会覆盖手动修改。
+> 实际值从 `prod.config.yaml` 的 `datasource.postgresql.dsn` 和 `deploy.images` 中提取，重新生成会覆盖手动修改。
 
 ---
 
@@ -236,11 +237,15 @@ cp .env.development .env.production
 
 ### 步骤三：生成 Docker 环境变量
 
+使用 `env-generator` 服务从 `prod.config.yaml` 自动生成 `.env`，**无需在服务器上安装 uv 或 Python**：
+
 ```bash
-uv run -m graphedu generate env --output docker/.env
+cd docker
+docker compose --profile env-gen run --rm env-generator
 ```
 
-该命令从 `prod.config.yaml` 读取配置，生成 `COMPOSE_PROFILES` 和数据库密码、镜像版本等变量。
+> `env-generator` 使用 `env-gen` Profile，不会启动 postgres/redis/backend 等业务服务。
+> 本地开发环境（已安装 uv）仍可使用 `uv run -m graphedu generate env --output docker/.env`。
 
 ### 步骤四：构建并启动
 
@@ -339,7 +344,7 @@ docker compose --profile postgres --profile redis up -d
 
 1. 在 `prod.config.yaml` 中将 DSN 修改为外部地址
 2. 从 `deploy.profiles` 中移除对应服务
-3. 重新执行 `generate env`
+3. 重新生成 `.env`：`docker compose --profile env-gen run --rm env-generator`
 
 ```yaml
 # 示例：使用外部 PostgreSQL，仅 Docker 托管 Redis + 应用
@@ -395,8 +400,8 @@ docker compose down -v
 | `AGE extension not found` | `postgresql.conf` 未加载 AGE | 确认镜像构建正确，`shared_preload_libraries` 包含 `age` |
 | 初始化脚本未执行 | `volumes/pg/` 已存在 | 删除 `volumes/pg/` 后重启：`docker compose down && rm -rf volumes/pg && docker compose up -d` |
 | 前端白屏 | `.env.production` 未配置 | 确认 `VITE_API_BASE_URL=/api` 后重新构建前端 |
-| Worker/Beat 未启动 | Profile 未添加到 `COMPOSE_PROFILES` | 在 `prod.config.yaml` 的 `deploy.profiles` 中添加 `worker`/`beat`，重新 `generate env` |
-| `COMPOSE_PROFILES` 缺少服务 | `.env` 文件过期 | 重新运行 `uv run -m graphedu generate env --output docker/.env` |
+| Worker/Beat 未启动 | Profile 未添加到 `COMPOSE_PROFILES` | 在 `prod.config.yaml` 的 `deploy.profiles` 中添加 `worker`/`beat`，重新生成 `.env` |
+| `COMPOSE_PROFILES` 缺少服务 | `.env` 文件过期 | 重新运行 `docker compose --profile env-gen run --rm env-generator` |
 | 无法连接外部数据库 | DSN 使用了 Docker 服务名 | 使用外部 IP/hostname，而非 `graphedu-postgres` |
 
 ---

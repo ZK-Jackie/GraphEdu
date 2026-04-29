@@ -98,7 +98,7 @@ services:
   # Celery Worker 异步任务执行服务
   # 与 backend 共用同一镜像，以不同命令启动
   # ========================================
-  worker:
+  worker1:
     image: jackiey101/graphedu-backend:${BACKEND_VERSION:-latest}
     profiles:
       - worker
@@ -110,7 +110,7 @@ services:
     init: true
     restart: unless-stopped
     volumes:
-      - ./volumes/worker-data:/app/data
+      - ./volumes/worker1-data:/app/data
       - ../prod.config.yaml:/app/prod.config.yaml:ro
 #      - ../dev.config.yaml:/app/dev.config.yaml:ro
     depends_on:
@@ -182,6 +182,23 @@ services:
       start_period: 10s
     networks:
       - graphedu-network
+
+  # ========================================
+  # 环境变量生成器（一次性运行，不启动其他服务）
+  # 使用独立脚本 + 轻量 Python 镜像，无需预先构建后端镜像
+  # ========================================
+  env-generator:
+    image: astral/uv:python3.13-trixie-slim
+    profiles:
+      - env-gen
+    pull_policy: missing
+    container_name: graphedu-env-generator
+    working_dir: /app
+    volumes:
+      - ../prod.config.yaml:/app/prod.config.yaml:ro
+      - ./generate-env.py:/app/generate-env.py:ro
+      - .:/output
+    command: [ "sh", "-c", "uv pip install --system -q pyyaml && uv run /app/generate-env.py -c /app/prod.config.yaml -o /output/.env" ]
 
 # ========================================
 # 网络配置

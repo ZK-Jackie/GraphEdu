@@ -7,6 +7,8 @@ deploy:
     - redis       # 注释此行 → 使用外部 Redis
     - backend
     - frontend
+    - worker
+    - beat
   # Docker 镜像版本（留空使用默认值；生产环境建议 pin 到具体版本）
   images:
     postgres: '18.3.0'
@@ -33,23 +35,14 @@ _llm_common: &zai_llm
   name: 'glm-4.7'
   api_base: 'https://open.bigmodel.cn/api/paas/v4'
   temperature: 0.1
-  max_tokens: 131071
+  max_tokens: 128000
   top_p: 0.9
   api_key: 'your_zhipu_api_key_here'
   concur_limit: 2
 
-_zai_embed: &zai_embed
+_embed_common: &zai_embed
   name: 'embedding-3'
   api_base: 'https://open.bigmodel.cn/api/paas/v4'
-  concur_limit: 50
-  max_tokens: 8192
-  api_key: 'your_zhipu_api_key_here'
-  batch_size: 64
-  batch_max_tokens: 196608
-
-_embed_common: &aliyun_embed
-  name: 'text-embedding-v4'
-  api_base: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
   concur_limit: 50
   max_tokens: 8192
   api_key: 'your_dashscope_api_key_here'
@@ -97,7 +90,7 @@ datasource:
     graphrag_graph_name: 'graphrag'
 
   redis:
-    dsn: 'redis://your_username:your_password@localhost:6379/0?max_connections=50&socket_keepalive=true&socket_connect_timeout=5&socket_timeout=5&retry_on_timeout=1&health_check_interval=30&decode_responses=true'
+    dsn: 'redis://graphedu-redis:6379/0?max_connections=50&socket_keepalive=true&socket_connect_timeout=5&socket_timeout=5&retry_on_timeout=1&health_check_interval=30&decode_responses=true'
 
   oss:
     provider: aliyun
@@ -162,16 +155,16 @@ logging:
       backupCount: 30
       encoding: utf8
       delay: false
-    feishu_webhook:
-      class: graphedu.common.utils.logger.FeishuWebhookHandler
-      level: ERROR
-      formatter: standard
-      url: 'https://open.feishu.cn/open-apis/bot/v2/hook/your_webhook_id'
-      sign_secret: your_feishu_sign_secret
-      timeout: 5
-      retries: 3
+#    feishu_webhook:
+#      class: graphedu.common.utils.logger.FeishuWebhookHandler
+#      level: ERROR
+#      formatter: standard
+#      url: 'https://open.feishu.cn/open-apis/bot/v2/hook/your_webhook_id'
+#      sign_secret: your_feishu_sign_secret
+#      timeout: 5
+#      retries: 3
   root:
-    level: DEBUG
+    level: INFO
     handlers: [ 'console', 'daily_file', 'feishu_webhook' ]
 
 # ============================================
@@ -193,8 +186,8 @@ scheduler:
 # Celery Worker 配置
 # ============================================
 celery:
-  broker_url: 'redis://your_username:your_password@localhost:6379/1'
-  result_backend: 'redis://your_username:your_password@localhost:6379/2'
+  broker_url: 'redis://graphedu-redis:6379/1'
+  result_backend: 'redis://graphedu-redis:6379/2'
   # task_soft_time_limit: 3000              # 软超时（秒），触发异常让任务优雅退出
   # result_expires: 86400                   # 结果保留 24 小时
   # redis_max_connections: 5                # Redis 连接池大小
@@ -217,8 +210,8 @@ graphrag:
   llm:
     <<: *zai_llm
     name: 'glm-4.5'
-    concur_limit: 10
-    max_tokens: 98304
+    concur_limit: 8
+    max_tokens: 128000
   embeddings:
     <<: *zai_embed
     dimensions: 1024

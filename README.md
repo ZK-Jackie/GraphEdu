@@ -235,7 +235,7 @@ cd /path/to/deploy
 
 # 2. 配置后端
 cp example.config.yaml prod.config.yaml
-# 编辑 prod.config.yaml，DSN 使用 Docker 服务名（如 graphedu-postgres:5432）
+# 编辑 prod.config.yaml，DSN 使用 Docker 服务名/容器名（如 graphedu-postgres:5432）
 vim prod.config.yaml
 
 # 3. 配置前端
@@ -246,10 +246,15 @@ vim .env.production
 cd ..
 
 # 4. 生成 Docker 环境变量
-uv run -m graphedu generate env --output docker/.env
+# 方式一：使用独立脚本（仅需 Python 3 + PyYAML，无需构建任何镜像）
+pip install pyyaml
+python3 docker/generate-env.py
+
+# 方式二：使用 Docker（无需本地 Python，与后端共用 uv 镜像层）
+cd docker
+docker compose --profile env-gen run --rm env-generator
 
 # 5. 构建并启动
-cd docker
 docker compose up -d --build
 ```
 
