@@ -179,4 +179,5 @@ docs/
 
 # Auto generated files
 **/generated/
+!graphedu-ui/src/types/generated/
 .generated/

@@ -38,10 +38,6 @@ __screenshots__/
 test-results/
 playwright-report/
 
-# auto-generated files
-./src/typed/generated/
-.generated/
-
 # unprepared files
 e2e/
 

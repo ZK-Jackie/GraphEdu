@@ -21,7 +21,7 @@ COPY graphedu-ui/ /app
 WORKDIR /app
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-RUN pnpm run build:prod
+RUN pnpm run build-only
 
 # ========================================
 # 阶段 2: 运行时（官方 nginx:stable-alpine，轻量、无需手工编译）
