@@ -1,0 +1,662 @@
+app:
+  description: ''
+  icon: 🧑‍🎓
+  icon_background: '#D5F5F6'
+  icon_type: emoji
+  mode: workflow
+  name: 出题者-student
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/zhipuai:0.0.24@e0c0e5847fb5f51c3a4620933dc25f6014ed2c8b754fe9ba634d3cc333951bb1
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: template-transform
+      id: 1774459464312-source-1774465200151-target
+      source: '1774459464312'
+      sourceHandle: source
+      target: '1774465200151'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-true-1774465772640-target
+      source: '1774465590950'
+      sourceHandle: 'true'
+      target: '1774465772640'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-false-1774465772640-target
+      source: '1774465590950'
+      sourceHandle: 'false'
+      target: '1774465772640'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-674bdcf4-b593-4f74-8bc6-d106bdad652a-17744661908740-target
+      source: '1774465590950'
+      sourceHandle: 674bdcf4-b593-4f74-8bc6-d106bdad652a
+      target: '17744661908740'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-9e02f4d2-a932-495a-83aa-124625fab48e-17744662346150-target
+      source: '1774465590950'
+      sourceHandle: 9e02f4d2-a932-495a-83aa-124625fab48e
+      target: '17744662346150'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: variable-aggregator
+      id: 1774465772640-source-1774466323871-target
+      source: '1774465772640'
+      sourceHandle: source
+      target: '1774466323871'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: variable-aggregator
+      id: 17744661908740-source-1774466323871-target
+      source: '17744661908740'
+      sourceHandle: source
+      target: '1774466323871'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: variable-aggregator
+      id: 17744662346150-source-1774466323871-target
+      source: '17744662346150'
+      sourceHandle: source
+      target: '1774466323871'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: variable-aggregator
+        targetType: end
+      id: 1774466323871-source-1774465876757-target
+      source: '1774466323871'
+      sourceHandle: source
+      target: '1774465876757'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: if-else
+      id: 1774465200151-source-1774465590950-target
+      source: '1774465200151'
+      sourceHandle: source
+      target: '1774465590950'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: field
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: field
+        - default: ''
+          hint: ''
+          label: question_type
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: question_type
+        - default: ''
+          hint: ''
+          label: difficulty
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: difficulty
+        - default: ''
+          hint: ''
+          label: extra_info
+          options: []
+          placeholder: ''
+          required: false
+          type: text-input
+          variable: extra_info
+      height: 185
+      id: '1774459464312'
+      position:
+        x: -155.39206513334702
+        y: 104.99479177982167
+      positionAbsolute:
+        x: -155.39206513334702
+        y: 104.99479177982167
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        selected: false
+        template: "领域：{{ arg1 }}\r\n难度：{{ arg2 }}\r\n需要生成的题目的补充信息：{{ arg3 }}"
+        title: user_prompt
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1774459464312'
+          - field
+          value_type: string
+          variable: arg1
+        - value_selector:
+          - '1774459464312'
+          - difficulty
+          value_type: string
+          variable: arg2
+        - value_selector:
+          - '1774459464312'
+          - extra_info
+          value_type: string
+          variable: arg3
+      height: 50
+      id: '1774465200151'
+      position:
+        x: 200.42987615555097
+        y: 125.99479177982167
+      positionAbsolute:
+        x: 200.42987615555097
+        y: 125.99479177982167
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: 0d799b2e-70a0-4816-be7b-7e8b0ad67b99
+            value: single
+            varType: string
+            variable_selector:
+            - '1774459464312'
+            - question_type
+          id: 'true'
+          logical_operator: and
+        - case_id: 674bdcf4-b593-4f74-8bc6-d106bdad652a
+          conditions:
+          - comparison_operator: contains
+            id: 003d32d3-25d9-4891-99e8-71a145dad20b
+            value: multi
+            varType: string
+            variable_selector:
+            - '1774459464312'
+            - question_type
+          id: 674bdcf4-b593-4f74-8bc6-d106bdad652a
+          logical_operator: and
+        - case_id: 9e02f4d2-a932-495a-83aa-124625fab48e
+          conditions:
+          - comparison_operator: contains
+            id: 080dca67-85fd-4a66-a1c9-965b5d98224f
+            value: judge
+            varType: string
+            variable_selector:
+            - '1774459464312'
+            - question_type
+          id: 9e02f4d2-a932-495a-83aa-124625fab48e
+          logical_operator: and
+        selected: false
+        title: 条件分支
+        type: if-else
+      height: 290
+      id: '1774465590950'
+      position:
+        x: 517.675623037697
+        y: 104.68185199729956
+      positionAbsolute:
+        x: 517.675623037697
+        y: 104.68185199729956
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            response_format: json_object
+            temperature: 0.7
+            thinking: true
+          mode: chat
+          name: glm-4.5-air
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - id: 4e60e70f-2933-421e-bcfe-26699ab53c17
+          role: system
+          text: "你是一个专业的测验出题专家，擅长依据用户提供的主题，生成符合特定难度的测验题目，一次只生成一道题目，最终只输出单个json对象。\n\
+            \n## 输出格式\n- **试题类型**：单项选择题\n- **格式**：JSON\n\n## 限制\n1. **试题内容不可重复**：所生成的试题只能生成一遍\n\
+            2. **非专有名词输出格式**：输出的非专有名词需要以中文的形式展示\n\n## 工作流程\n1. **主题确认**：确认用户输入的学习主题（如计算机科学-编程基础）。\n\
+            2. **慎重考量难度**：充分考虑生成测验题目的难度，确保题目难度符合用户预期，可选的难度从简到难依次为：“基础”“简单”“中等”“较难”“极难”。请精准把握不同难度层级的知识点覆盖和思维要求，确保生成的题目难度准确合适。\n\
+            3. **试题生成**：为主题生成一道单项选择题，包括题干和四个选项，答案则以正确答案的选项去设置。\n4. **解释生成**：为生成的题解释选择正确答案的原因，可以提供一些题目涉及的知识点的易错点及更多信息。\n\
+            5. **格式化输出**：将生成的试题以JSON格式输出。\n\n## 示例\n```json\n{\n  \"topic\": \"计算机科学\"\
+            ,\n  \"question\": \"以下哪个是编程语言的基本结构？\",\n  \"options\": [\"A 变量\",\"B\
+            \ 函数\", \"C 类\",\"D 模块\"],\n  \"answer\": \"B\",\n  \"explanation\":\"\
+            函数是编程语言的基本结构，因为它实现了代码的封装、复用和模块化，是执行具体任务的核心单元。其他选项如变量、类和模块，虽然重要，但更多是作为支持函数的工具或组织方式。\"\
+            \n}\n```"
+        - id: 548d9cbc-6b7e-4f92-9ff6-e84c634477f5
+          role: user
+          text: '{{#1774465200151.output#}}'
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: true
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              answer:
+                description: 答案
+                type: string
+              explanation:
+                description: 答案解释
+                type: string
+              options:
+                description: 选项
+                items:
+                  type: string
+                type: array
+              question:
+                description: 题目
+                type: string
+              topic:
+                description: 题目主题
+                type: string
+            required:
+            - topic
+            - question
+            - options
+            - answer
+            - explanation
+            type: object
+        structured_output_enabled: true
+        title: single
+        type: llm
+        vision:
+          enabled: false
+      height: 115
+      id: '1774465772640'
+      position:
+        x: 920.1692812297597
+        y: 28.804828118430095
+      positionAbsolute:
+        x: 920.1692812297597
+        y: 28.804828118430095
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        outputs:
+        - value_selector:
+          - '1774466323871'
+          - text
+          - output
+          value_type: object
+          variable: output
+        - value_selector:
+          - '1774466323871'
+          - usage
+          - output
+          value_type: object
+          variable: usage
+        - value_selector:
+          - '1774466323871'
+          - reasoning_content
+          - output
+          value_type: object
+          variable: reasoning_content
+        - value_selector:
+          - '1774466323871'
+          - structured_output
+          - output
+          value_type: object
+          variable: structured_output
+        selected: false
+        title: 输出
+        type: end
+      height: 165
+      id: '1774465876757'
+      position:
+        x: 1676.9861212633896
+        y: 28.804828118430095
+      positionAbsolute:
+        x: 1676.9861212633896
+        y: 28.804828118430095
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            response_format: json_object
+            temperature: 0.7
+          mode: chat
+          name: glm-4.5-air
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - id: 4e60e70f-2933-421e-bcfe-26699ab53c17
+          role: system
+          text: "你是一个专业的测验出题专家，擅长依据用户提供的主题，生成符合特定难度的测验题目，一次只生成一道题目，最终只输出单个json对象。\n\
+            \n## 输出格式\n\n- **试题类型**：多项选择题\n- **格式**：JSON\n\n## 限制\n\n1. **试题内容不可重复**：所生成的试题只能生成一遍\n\
+            2. **非专有名词输出格式**：输出的非专有名词需要以中文的形式展示\n\n## 工作流程\n\n1. **主题确认**：确认用户输入的学习主题（如计算机科学-编程基础）。\n\
+            2. **慎重考量难度**：充分考虑生成测验题目的难度，确保题目难度符合用户预期，可选的难度从简到难依次为：“基础”“简单”“中等”“较难”“极难”。请精准把握不同难度层级的知识点覆盖和思维要求，确保生成的题目难度准确合适。\n\
+            3. **试题生成**：为主题生成一道多项选择题，包括题干和四至七个选项，在答案处明确指出正确答案选项，多个选项答案以字符串数组形式组织。注意，出题时，一定会有**两个及以上**的选项是正确的。\n\
+            4. **解释生成**：为生成的题解释选择正确答案的原因，可以提供一些题目涉及的知识点的易错点及更多信息。\n5. **格式化输出**：将生成的试题以JSON格式输出。\n\
+            \n## 示例\n\n```json\n{\n  \"topic\": \"计算机科学\",\n  \"question\": \"以下哪些属于面向对象编程的特性？（可多选）\"\
+            ,\n  \"options\": [\"A 封装\",\"B 继承\",\"C 多态\",\"D 函数式编程\"],\n  \"answer\"\
+            : [\"A\",\"B\",\"C\"],\n  \"explanation\": \"面向对象编程的特性包括封装、继承和多态。封装是将数据和操作数据的方法绑定在一起，隐藏内部实现细节；继承允许创建一个新类继承现有类的属性和方法；多态是指同一个方法可以根据对象的不同类型而表现出不同的行为。函数式编程是一种编程范式，不属于面向对象编程的特性。\"\
+            \n}\n```"
+        - id: 548d9cbc-6b7e-4f92-9ff6-e84c634477f5
+          role: user
+          text: '{{#1774465200151.output#}}'
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              answer:
+                description: 答案
+                items:
+                  type: string
+                type: array
+              explanation:
+                description: 答案解释
+                type: string
+              options:
+                description: 选项
+                items:
+                  type: string
+                type: array
+              question:
+                description: 题目
+                type: string
+              topic:
+                description: 题目主题
+                type: string
+            required:
+            - topic
+            - question
+            - options
+            - answer
+            - explanation
+            type: object
+        structured_output_enabled: true
+        title: multi
+        type: llm
+        vision:
+          enabled: false
+      height: 115
+      id: '17744661908740'
+      position:
+        x: 920.1692812297597
+        y: 200.98501574577318
+      positionAbsolute:
+        x: 920.1692812297597
+        y: 200.98501574577318
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            response_format: json_object
+            temperature: 0.7
+          mode: chat
+          name: glm-4.5-air
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - id: 4e60e70f-2933-421e-bcfe-26699ab53c17
+          role: system
+          text: "你是一个专业的测验出题专家，擅长依据用户提供的主题，生成符合特定难度的测验题目，一次只生成一道题目，最终只输出单个json对象。\n\
+            \n## 输出格式\n\n- **试题类型**：判断题\n- **格式**：JSON\n\n## 限制\n\n1. **试题内容不可重复**：所生成的试题只能生成一遍\n\
+            2. **非专有名词输出格式**：输出的非专有名词需要以中文的形式展示\n\n## 工作流程\n\n1. **主题确认**：确认用户输入的学习主题（如计算机科学-编程基础）。\n\
+            2. **慎重考量难度**：充分考虑生成测验题目的难度，确保题目难度符合用户预期，可选的难度从简到难依次为：“基础”“简单”“中等”“较难”“极难”。请精准把握不同难度层级的知识点覆盖和思维要求，确保生成的题目难度准确合适。\n\
+            3. **试题生成**：为主题生成一道判断题，给出陈述语句，要求判断对错，在答案处用布尔类型明确给出正确或错误。\n4. **解释生成**：为生成的题解释选择正确答案的原因，可以提供一些题目涉及的知识点的易错点及更多信息。\n\
+            5. **格式化输出**：将生成的试题以JSON格式输出。\n\n## 示例\n\n```json\n{\n  \"topic\": \"\
+            计算机科学\",\n  \"question\": \"判断：所有的编程语言都支持面向对象编程。\",\n  \"answer\": false,\n\
+            \  \"explanation\": \"虽然面向对象编程很流行，但并非所有编程语言都支持面向对象编程。例如，早期的C语言主要是面向过程的编程语言，本身并不直接支持面向对象编程的特性。后来通过一些技巧和扩展可以实现类似面向对象的编程风格，但它本身最初设计并非面向对象。\"\
+            \n}\n```"
+        - id: 548d9cbc-6b7e-4f92-9ff6-e84c634477f5
+          role: user
+          text: '{{#1774465200151.output#}}'
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              answer:
+                description: 答案
+                type: boolean
+              explanation:
+                description: 答案解释
+                type: string
+              question:
+                description: 题目
+                type: string
+              topic:
+                description: 题目主题
+                type: string
+            required:
+            - topic
+            - question
+            - answer
+            - explanation
+            type: object
+        structured_output_enabled: true
+        title: option
+        type: llm
+        vision:
+          enabled: false
+      height: 115
+      id: '17744662346150'
+      position:
+        x: 920.1692812297597
+        y: 382.27043953176366
+      positionAbsolute:
+        x: 920.1692812297597
+        y: 382.27043953176366
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        advanced_settings:
+          group_enabled: true
+          groups:
+          - groupId: eb51e3fe-7357-4726-8ac1-42fd57b40e6e
+            group_name: text
+            output_type: string
+            variables:
+            - - '17744662346150'
+              - text
+            - - '17744661908740'
+              - text
+            - - '1774465772640'
+              - text
+          - groupId: 227b8596-6c5a-41f5-99fd-e72089a27bfb
+            group_name: reasoning_content
+            output_type: string
+            variables:
+            - - '17744662346150'
+              - reasoning_content
+            - - '17744661908740'
+              - reasoning_content
+            - - '1774465772640'
+              - reasoning_content
+          - groupId: c8a948b4-5cd3-4c20-8395-2c7d2e0a599a
+            group_name: structured_output
+            output_type: object
+            variables:
+            - - '17744662346150'
+              - structured_output
+            - - '17744661908740'
+              - structured_output
+            - - '1774465772640'
+              - structured_output
+          - groupId: 2ece7670-fdb0-4f91-8fe5-0c2aa605add7
+            group_name: usage
+            output_type: object
+            variables:
+            - - '17744662346150'
+              - usage
+            - - '17744661908740'
+              - usage
+            - - '1774465772640'
+              - usage
+        output_type: string
+        selected: false
+        title: final
+        type: variable-aggregator
+        variables:
+        - - '17744662346150'
+          - text
+        - - '17744661908740'
+          - text
+        - - '1774465772640'
+          - text
+      height: 481
+      id: '1774466323871'
+      position:
+        x: 1308.960414836405
+        y: 28.804828118430095
+      positionAbsolute:
+        x: 1308.960414836405
+        y: 28.804828118430095
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    viewport:
+      x: -400.66189190836167
+      y: 140.5435775656282
+      zoom: 1.0000000000000002
+  rag_pipeline_variables: []

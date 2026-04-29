@@ -1,0 +1,748 @@
+app:
+  description: ''
+  icon: 👨‍🏫
+  icon_background: '#FFE4E8'
+  icon_type: emoji
+  mode: workflow
+  name: 出题者-teacher
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/zhipuai:0.0.24@e0c0e5847fb5f51c3a4620933dc25f6014ed2c8b754fe9ba634d3cc333951bb1
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-true-1774465772640-target
+      source: '1774465590950'
+      sourceHandle: 'true'
+      target: '1774465772640'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-false-1774465772640-target
+      source: '1774465590950'
+      sourceHandle: 'false'
+      target: '1774465772640'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-674bdcf4-b593-4f74-8bc6-d106bdad652a-17744661908740-target
+      source: '1774465590950'
+      sourceHandle: 674bdcf4-b593-4f74-8bc6-d106bdad652a
+      target: '17744661908740'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1774465590950-9e02f4d2-a932-495a-83aa-124625fab48e-17744662346150-target
+      source: '1774465590950'
+      sourceHandle: 9e02f4d2-a932-495a-83aa-124625fab48e
+      target: '17744662346150'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: variable-aggregator
+      id: 1774465772640-source-1774466323871-target
+      source: '1774465772640'
+      sourceHandle: source
+      target: '1774466323871'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: variable-aggregator
+      id: 17744661908740-source-1774466323871-target
+      source: '17744661908740'
+      sourceHandle: source
+      target: '1774466323871'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: variable-aggregator
+      id: 17744662346150-source-1774466323871-target
+      source: '17744662346150'
+      sourceHandle: source
+      target: '1774466323871'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: variable-aggregator
+        targetType: end
+      id: 1774466323871-source-1774465876757-target
+      source: '1774466323871'
+      sourceHandle: source
+      target: '1774465876757'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: if-else
+      id: 1774465200151-source-1774465590950-target
+      source: '1774465200151'
+      sourceHandle: source
+      target: '1774465590950'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: document-extractor
+      id: 1774459464312-source-1774722318428-target
+      source: '1774459464312'
+      sourceHandle: source
+      target: '1774722318428'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: document-extractor
+        targetType: template-transform
+      id: 1774722318428-source-1774465200151-target
+      source: '1774722318428'
+      sourceHandle: source
+      target: '1774465200151'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - video
+          - audio
+          - image
+          - document
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          default: ''
+          hint: ''
+          label: upload_files
+          max_length: 10
+          options: []
+          placeholder: ''
+          required: true
+          type: file-list
+          variable: upload_files
+        - default: ''
+          hint: ''
+          label: question_type
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: question_type
+        - default: ''
+          hint: ''
+          label: difficulty
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: difficulty
+        - default: '1'
+          hint: ''
+          label: number
+          options: []
+          placeholder: ''
+          required: true
+          type: number
+          variable: number
+        - default: ''
+          hint: ''
+          label: extra_info
+          options: []
+          placeholder: ''
+          required: false
+          type: text-input
+          variable: extra_info
+      height: 211
+      id: '1774459464312'
+      position:
+        x: -506.2934717953225
+        y: 116.95733973420718
+      positionAbsolute:
+        x: -506.2934717953225
+        y: 116.95733973420718
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        selected: false
+        template: "生成数量：{{ arg1 }}\r\n难度：{{ arg2 }}\r\n需要生成的题目的补充信息：{{ arg3 }}\r\n\
+          \r\n生成时需要参照的文件输入：\r\n{{ upload_files }}"
+        title: user_prompt
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1774459464312'
+          - number
+          value_type: number
+          variable: arg1
+        - value_selector:
+          - '1774459464312'
+          - difficulty
+          value_type: string
+          variable: arg2
+        - value_selector:
+          - '1774459464312'
+          - extra_info
+          value_type: string
+          variable: arg3
+        - value_selector:
+          - '1774722318428'
+          - text
+          value_type: array[string]
+          variable: upload_files
+      height: 50
+      id: '1774465200151'
+      position:
+        x: 180.4922962315751
+        y: 137.95733973420718
+      positionAbsolute:
+        x: 180.4922962315751
+        y: 137.95733973420718
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: 0d799b2e-70a0-4816-be7b-7e8b0ad67b99
+            value: single
+            varType: string
+            variable_selector:
+            - '1774459464312'
+            - question_type
+          id: 'true'
+          logical_operator: and
+        - case_id: 674bdcf4-b593-4f74-8bc6-d106bdad652a
+          conditions:
+          - comparison_operator: contains
+            id: 003d32d3-25d9-4891-99e8-71a145dad20b
+            value: multi
+            varType: string
+            variable_selector:
+            - '1774459464312'
+            - question_type
+          id: 674bdcf4-b593-4f74-8bc6-d106bdad652a
+          logical_operator: and
+        - case_id: 9e02f4d2-a932-495a-83aa-124625fab48e
+          conditions:
+          - comparison_operator: contains
+            id: 080dca67-85fd-4a66-a1c9-965b5d98224f
+            value: judge
+            varType: string
+            variable_selector:
+            - '1774459464312'
+            - question_type
+          id: 9e02f4d2-a932-495a-83aa-124625fab48e
+          logical_operator: and
+        selected: false
+        title: 条件分支
+        type: if-else
+      height: 290
+      id: '1774465590950'
+      position:
+        x: 513.688107052902
+        y: 137.95733973420718
+      positionAbsolute:
+        x: 513.688107052902
+        y: 137.95733973420718
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            response_format: json_object
+            temperature: 0.95
+            thinking: true
+          mode: chat
+          name: glm-4.5-air
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - id: 4e60e70f-2933-421e-bcfe-26699ab53c17
+          role: system
+          text: "你是一个专业的测验出题专家，擅长依据用户提供的主题，生成符合特定难度和数量的测验题目。\n\n## 输入变量\n用户会在提问中提供以下信息，请严格遵从：\n\
+            - **主题**：用户希望考查的知识领域。\n- **难度**：从简到难依次为“基础”“简单”“中等”“较难”“极难”。\n- **数量**：用户期望生成的题目数量。\n\
+            \n## 核心要求\n1. **严格的JSON数组输出**：不论生成多少道题（即使只有1道），**必须且只能**输出一个标准的JSON数组格式\
+            \ `[...]`。绝对不要输出单个JSON对象 `{...}`。\n2. **严格遵守数量**：生成的题目总数必须与用户输入的【数量】完全一致。\n\
+            3. **细化Topic（关键）**：JSON中的 `topic` 字段不能是笼统的大类（如禁止只写“计算机科学”），必须拆解为具体细化的知识点（如“数据结构-队列的特性”、“计算机网络-OSI表示层功能”）。\n\
+            4. **纯净输出**：不要输出任何解释性文本、Markdown标记（如 ```json ）或多余的前后缀，直接输出JSON数组字符。\n\n\
+            ## 限制条件\n优先满足用户提供的需求信息，用户没有要求时严格遵循下面的限制条件。\n1. **试题内容不可重复**：同一批次生成的试题，题干和考点尽可能不重复，除非用户要求。\n\
+            2. **非专有名词中文化**：输出的非专有名词需要以中文的形式展示（专有名词如API、OSI可保留英文）。\n\n\n## 工作流程\n\
+            1. **解析与拆解**：分析用户的【主题】，根据【数量】将其拆解为多个不重复的、更细化的子知识点。\n2. **难度匹配**：针对每个细化知识点，严格按照用户指定的【难度】层级进行出题，确保思维深度和考点覆盖符合该难度标准。\n\
+            3. **命题与解析**：为每个子知识点生成一道单项选择题（包含题干、4个选项、正确答案），并编写详尽的解析（说明正确原因、易错点提醒等）。\n\
+            4. **格式化组装**：将所有题目组装成JSON数组。\n\n## 输出示例\n[\n  {\n    \"topic\": \"数据结构-队列的基本特性\"\
+            ,\n    \"question\": \"在数据结构中，哪种结构最适合实现“先进先出”（FIFO）的原则？\",\n    \"options\"\
+            : [\"A 栈\", \"B 队列\", \"C 二叉树\", \"D 哈希表\"],\n    \"answer\": \"B\",\n\
+            \    \"explanation\": \"队列是最适合实现“先进先出”（FIFO）原则的数据结构。栈遵循“后进先出”（LIFO），二叉树用于层次和排序关系，哈希表用于快速查找，它们都不符合FIFO的特性。易错点：容易将队列与栈的特性混淆。\"\
+            \n  },\n  {\n    \"topic\": \"计算机网络-OSI七层模型职责\",\n    \"question\": \"\
+            OSI七层模型中，负责数据格式转换和加密解密的是哪一层？\",\n    \"options\": [\"A 传输层\", \"B 网络层\"\
+            , \"C 表示层\", \"D 会话层\"],\n    \"answer\": \"C\",\n    \"explanation\"\
+            : \"表示层负责处理数据的表示方式，包括数据格式转换、数据加密与解密、数据压缩与解压缩等。传输层负责端到端的通信，网络层负责路由和寻址，会话层负责建立、管理和终止会话。\"\
+            \n  },\n  ...\n]\n"
+        - id: 548d9cbc-6b7e-4f92-9ff6-e84c634477f5
+          role: user
+          text: '{{#1774465200151.output#}}'
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: true
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              answer:
+                description: 答案
+                type: string
+              explanation:
+                description: 答案解释
+                type: string
+              options:
+                description: 选项
+                items:
+                  type: string
+                type: array
+              question:
+                description: 题目
+                type: string
+              topic:
+                description: 题目主题
+                type: string
+            required:
+            - topic
+            - question
+            - options
+            - answer
+            - explanation
+            type: object
+        structured_output_enabled: true
+        title: single
+        type: llm
+        vision:
+          enabled: false
+      height: 115
+      id: '1774465772640'
+      position:
+        x: 926.8151412044183
+        y: 28.804828118430095
+      positionAbsolute:
+        x: 926.8151412044183
+        y: 28.804828118430095
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        outputs:
+        - value_selector:
+          - '1774466323871'
+          - text
+          - output
+          value_type: object
+          variable: output
+        - value_selector:
+          - '1774466323871'
+          - usage
+          - output
+          value_type: object
+          variable: usage
+        - value_selector:
+          - '1774466323871'
+          - reasoning_content
+          - output
+          value_type: object
+          variable: reasoning_content
+        - value_selector:
+          - '1774466323871'
+          - structured_output
+          - output
+          value_type: object
+          variable: structured_output
+        selected: false
+        title: 输出
+        type: end
+      height: 165
+      id: '1774465876757'
+      position:
+        x: 1676.9861212633896
+        y: 28.804828118430095
+      positionAbsolute:
+        x: 1676.9861212633896
+        y: 28.804828118430095
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            response_format: json_object
+            temperature: 0.95
+            thinking: true
+          mode: chat
+          name: glm-4.5-air
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - id: 4e60e70f-2933-421e-bcfe-26699ab53c17
+          role: system
+          text: "你是一个专业的测验出题专家，擅长依据用户提供的主题，生成符合特定难度和数量的测验题目。\n\n## 输入变量\n用户会在提问中提供以下信息，请严格遵从：\n\
+            - **主题**：用户希望考查的知识领域。\n- **难度**：从简到难依次为“基础”“简单”“中等”“较难”“极难”。\n- **数量**：用户期望生成的题目数量。\n\
+            \n## 核心要求\n1. **严格的JSON数组输出**：不论生成多少道题（即使只有1道），**必须且只能**输出一个标准的JSON数组格式\
+            \ `[...]`。绝对不要输出单个JSON对象 `{...}`。\n2. **严格遵守数量**：生成的题目总数必须与用户输入的【数量】完全一致。\n\
+            3. **细化Topic（关键）**：JSON中的 `topic` 字段不能是笼统的大类（如禁止只写“计算机科学”），必须拆解为具体细化的知识点（如“计算机网络-传输层协议特性”、“深度学习-防止过拟合的策略”）。\n\
+            4. **纯净输出**：不要输出任何解释性文本、Markdown标记（如 ```json ）或多余的前后缀，直接输出JSON数组字符。\n\n\
+            ## 限制条件\n优先满足用户提供的需求信息，用户没有要求时严格遵循下面的限制条件。\n1. **试题内容不可重复**：同一批次生成的试题，题干和考点尽可能不重复。\n\
+            2. **非专有名词中文化**：输出的非专有名词需要以中文的形式展示（专有名词如TCP、Dropout可保留英文）。\n3. **多选题底线**：作为多项选择题，每道题**必须且只能有两个或两个以上**的正确选项，绝对不能出现只有一个正确选项的情况。\n\
+            \n\n## 工作流程\n1. **解析与拆解**：分析用户的【主题】，根据【数量】将其拆解为多个不重复的、更细化的子知识点。\n2. **难度匹配**：针对每个细化知识点，严格按照用户指定的【难度】层级进行出题，确保思维深度和考点覆盖符合该难度标准。\n\
+            3. **命题与解析**：为每个子知识点生成一道多项选择题，包含题干、4至7个选项，正确答案以字符串数组形式组织（如 `[\"A\", \"\
+            C\"]`）。编写详尽的解析，说明每个正确选项的原因，并指出干扰选项的错误之处及易错点。\n4. **格式化组装**：将所有题目组装成JSON数组。\n\
+            \n## 输出示例\n[\n  {\n    \"topic\": \"计算机网络-传输层协议特性\",\n    \"question\"\
+            : \"关于TCP（传输控制协议）的特性，以下说法正确的是哪些？\",\n    \"options\": [\n      \"A 面向连接的协议\"\
+            ,\n      \"B 提供不可靠的数据传输服务\",\n      \"C 使用三次握手建立连接\",\n      \"D 保证数据的按序到达\"\
+            \n    ],\n    \"answer\": [\"A\", \"C\", \"D\"],\n    \"explanation\"\
+            : \"TCP是面向连接的、可靠的传输层协议（A正确，B错误）。它在传输数据前需要通过三次握手建立连接（C正确），并且通过序列号和确认机制保证数据按序到达（D正确）。易错点：容易将TCP的可靠性与UDP的无连接、不可靠特性混淆。\"\
+            \n  },\n  {\n    \"topic\": \"深度学习-防止过拟合的策略\",\n    \"question\": \"在训练深度神经网络时，以下哪些方法可以有效缓解过拟合现象？\"\
+            ,\n    \"options\": [\n      \"A 增加网络的隐藏层节点数量\",\n      \"B 引入Dropout层\"\
+            ,\n      \"C 使用L2正则化（权重衰减）\",\n      \"D 扩大训练数据集规模\"\n    ],\n    \"answer\"\
+            : [\"B\", \"C\", \"D\"],\n    \"explanation\": \"过拟合是指模型在训练集上表现好但在测试集上表现差。增加网络节点（A）会增加模型容量，通常更容易导致过拟合。Dropout（B）通过随机失活神经元减轻共适应性，L2正则化（C）通过惩罚大权重限制模型复杂度，扩大训练数据（D）能让模型学习到更通用的特征，这三者都是缓解过拟合的有效手段。\"\
+            \n  },\n  ...\n]"
+        - id: 548d9cbc-6b7e-4f92-9ff6-e84c634477f5
+          role: user
+          text: '{{#1774465200151.output#}}'
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              answer:
+                description: 答案
+                items:
+                  type: string
+                type: array
+              explanation:
+                description: 答案解释
+                type: string
+              options:
+                description: 选项
+                items:
+                  type: string
+                type: array
+              question:
+                description: 题目
+                type: string
+              topic:
+                description: 题目主题
+                type: string
+            required:
+            - topic
+            - question
+            - options
+            - answer
+            - explanation
+            type: object
+        structured_output_enabled: true
+        title: multi
+        type: llm
+        vision:
+          enabled: false
+      height: 115
+      id: '17744661908740'
+      position:
+        x: 920.1692812297597
+        y: 224.9101116545442
+      positionAbsolute:
+        x: 920.1692812297597
+        y: 224.9101116545442
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            response_format: json_object
+            temperature: 0.95
+            thinking: true
+          mode: chat
+          name: glm-4.5-air
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - id: 4e60e70f-2933-421e-bcfe-26699ab53c17
+          role: system
+          text: "你是一个专业的测验出题专家，擅长依据用户提供的主题，生成符合特定难度和数量的测验题目。\n\n## 输入变量\n用户会在提问中提供以下信息，请严格遵从：\n\
+            - **主题**：用户希望考查的知识领域。\n- **难度**：从简到难依次为“基础”“简单”“中等”“较难”“极难”。\n- **数量**：用户期望生成的题目数量。\n\
+            \n## 核心要求\n1. **严格的JSON数组输出**：不论生成多少道题（即使只有1道），**必须且只能**输出一个标准的JSON数组格式\
+            \ `[...]`。绝对不要输出单个JSON对象 `{...}`。\n2. **严格遵守数量**：生成的题目总数必须与用户输入的【数量】完全一致。\n\
+            3. **细化Topic（关键）**：JSON中的 `topic` 字段不能是笼统的大类（如禁止只写“计算机科学”），必须拆解为具体细化的知识点（如“计算机网络-TCP协议特性”、“深度学习-模型泛化能力”）。\n\
+            4. **纯判断题格式**：试题仅包含陈述句，**不要包含选项字段**，`answer` 字段必须是布尔值（`true` 或 `false`）。\n\
+            5. **纯净输出**：不要输出任何解释性文本、Markdown标记（如 ```json ）或多余的前后缀，直接输出JSON数组字符。\n\n\
+            ## 限制条件\n优先满足用户提供的需求信息，用户没有要求时严格遵循下面的限制条件。\n1. **试题内容不可重复**：同一批次生成的试题，题干和考点尽可能不重复。\n\
+            2. **非专有名词中文化**：输出的非专有名词需要以中文的形式展示（专有名词如TCP、NoSQL可保留英文）。\n\n\n## 工作流程\n\
+            1. **解析与拆解**：分析用户的【主题】，根据【数量】将其拆解为多个不重复的、更细化的子知识点。\n2. **难度匹配**：针对每个细化知识点，严格按照用户指定的【难度】层级进行出题，确保思维深度和考点覆盖符合该难度标准（如“较难”级别的判断题应包含容易混淆的边缘概念）。\n\
+            3. **命题与解析**：为每个子知识点生成一道陈述型判断题，设置正确的布尔值答案。编写详尽的解析，明确说明为何对或为何错，并指出相关的易错点或延伸知识。\n\
+            4. **格式化组装**：将所有题目组装成JSON数组。\n\n## 输出示例\n[\n  {\n    \"topic\": \"计算机网络-传输层协议特性\"\
+            ,\n    \"question\": \"TCP协议是一种无连接的传输层协议。\",\n    \"answer\": false,\n\
+            \    \"explanation\": \"TCP（传输控制协议）是面向连接的、可靠的传输层协议，它在传输数据之前需要通过三次握手建立连接。而UDP才是无连接的传输层协议。易错点：容易将TCP的可靠连接与UDP的无连接特性混淆。\"\
+            \n  },\n  {\n    \"topic\": \"深度学习-防止过拟合的策略\",\n    \"question\": \"在深度学习中，增加神经网络的隐藏层节点数量一定能够提高模型的泛化能力。\"\
+            ,\n    \"answer\": false,\n    \"explanation\": \"增加隐藏层节点数量会增加模型的容量和拟合能力，但并不一定能提高泛化能力。如果节点过多，模型可能会过度拟合训练数据，导致在未见过的数据上表现变差（即过拟合现象）。提高泛化能力通常需要结合正则化、增加训练数据等综合手段。\"\
+            \n  },\n  ...\n]"
+        - id: 548d9cbc-6b7e-4f92-9ff6-e84c634477f5
+          role: user
+          text: '{{#1774465200151.output#}}'
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              answer:
+                description: 答案
+                type: boolean
+              explanation:
+                description: 答案解释
+                type: string
+              question:
+                description: 题目
+                type: string
+              topic:
+                description: 题目主题
+                type: string
+            required:
+            - topic
+            - question
+            - answer
+            - explanation
+            type: object
+        structured_output_enabled: true
+        title: option
+        type: llm
+        vision:
+          enabled: false
+      height: 115
+      id: '17744662346150'
+      position:
+        x: 920.1692812297597
+        y: 434.1081473341009
+      positionAbsolute:
+        x: 920.1692812297597
+        y: 434.1081473341009
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        advanced_settings:
+          group_enabled: true
+          groups:
+          - groupId: eb51e3fe-7357-4726-8ac1-42fd57b40e6e
+            group_name: text
+            output_type: string
+            variables:
+            - - '17744662346150'
+              - text
+            - - '17744661908740'
+              - text
+            - - '1774465772640'
+              - text
+          - groupId: 227b8596-6c5a-41f5-99fd-e72089a27bfb
+            group_name: reasoning_content
+            output_type: string
+            variables:
+            - - '17744662346150'
+              - reasoning_content
+            - - '17744661908740'
+              - reasoning_content
+            - - '1774465772640'
+              - reasoning_content
+          - groupId: c8a948b4-5cd3-4c20-8395-2c7d2e0a599a
+            group_name: structured_output
+            output_type: object
+            variables:
+            - - '17744662346150'
+              - structured_output
+            - - '17744661908740'
+              - structured_output
+            - - '1774465772640'
+              - structured_output
+          - groupId: 2ece7670-fdb0-4f91-8fe5-0c2aa605add7
+            group_name: usage
+            output_type: object
+            variables:
+            - - '17744662346150'
+              - usage
+            - - '17744661908740'
+              - usage
+            - - '1774465772640'
+              - usage
+        output_type: string
+        selected: false
+        title: final
+        type: variable-aggregator
+        variables:
+        - - '17744662346150'
+          - text
+        - - '17744661908740'
+          - text
+        - - '1774465772640'
+          - text
+      height: 481
+      id: '1774466323871'
+      position:
+        x: 1308.960414836405
+        y: 28.804828118430095
+      positionAbsolute:
+        x: 1308.960414836405
+        y: 28.804828118430095
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_array_file: true
+        selected: false
+        title: 文档提取器
+        type: document-extractor
+        variable_selector:
+        - '1774459464312'
+        - upload_files
+      height: 103
+      id: '1774722318428'
+      position:
+        x: -154.30442949421985
+        y: 137.95733973420718
+      positionAbsolute:
+        x: -154.30442949421985
+        y: 137.95733973420718
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    viewport:
+      x: -337.7419763529099
+      y: 144.35822422662739
+      zoom: 0.8642210032841082
+  rag_pipeline_variables: []

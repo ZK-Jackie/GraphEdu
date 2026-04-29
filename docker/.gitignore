@@ -1,4 +1,5 @@
 ./**/dev.*
 oss/
-dify/
+dify/*
+!dify/workflows/
 neo4j/
