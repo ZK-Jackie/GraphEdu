@@ -14,7 +14,7 @@ deploy:
     postgres: '18.3.0'
     redis: '8.6.2-alpine'
     backend: '0.1.0'
-    frontend: '0.1.0-fix.0'
+    frontend: '0.1.0-fix.1'
   # Docker 构建参数（留空使用默认值；用于加速国内构建）
   build:
     apt_mirror: 'mirrors.aliyun.com'               # Debian APT 镜像，留空使用官方源
