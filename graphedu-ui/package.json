@@ -1,6 +1,6 @@
 {
   "name": "graphedu-ui",
-  "version": "0.1.0",
+  "version": "0.1.0-fix.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -76,14 +76,12 @@
     "npm-run-all2": "^8.0.4",
     "oxfmt": "^0.47.0",
     "oxlint": "^1.62.0",
-    "rolldown": "1.0.0-rc.17",
-    "rollup-plugin-obfuscator": "^1.1.0",
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.3",
     "unplugin-auto-import": "^20.3.0",
     "unplugin-vue-components": "^30.0.0",
-    "vite": "^8.0.10",
-    "vite-plugin-compression": "^0.5.1",
+    "vite": "^7.3.2",
+    "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-vue-devtools": "^8.1.1",
     "vitest": "^4.0.18",
     "vue-tsc": "^3.2.5"

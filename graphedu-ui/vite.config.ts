@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, loadEnv, UserConfig } from 'vite'
 import createVitePlugins from './vite/plugins'
-import { type RolldownOptions } from 'rolldown'
+// import { type RolldownOptions } from 'rolldown'
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   // https://cn.vite.dev/config/#using-environment-variables-in-config
@@ -16,18 +16,23 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     build: {
-      sourcemap: false,
-      minify: 'oxc',
-      rolldownOptions: {
-        output: {
-          minify: {
-            compress: {
-              dropConsole: true,
-              dropDebugger: true
-            },
-          },
-        },
-      } as RolldownOptions,
+      sourcemap: true,
+      minify: false,
+      // vite 8.0 +，rolldown 与 antdv 4.x 有兼容性问题，待转用 antdv-next 后再更新
+      // rolldownOptions: {
+      //   output: {
+      //     minify: {
+      //       compress: {
+      //         dropConsole: true,
+      //         dropDebugger: true
+      //       },
+      //     },
+      //   },
+      // } as RolldownOptions,
+    },
+    // vite 7
+    esbuild: {
+      drop: ['console', 'debugger'],
     },
     // https://cn.vite.dev/config/server-options#server-proxy
     server: {
