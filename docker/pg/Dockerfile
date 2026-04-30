@@ -10,7 +10,8 @@ RUN if [ -n "$APT_MIRROR" ]; then \
     apt-get clean && apt-get update
 
 RUN apt-mark hold locales && \
-	apt-get install -y --no-install-recommends bison build-essential flex git postgresql-server-dev-18
+	apt-get install -y --no-install-recommends ca-certificates bison build-essential flex git postgresql-server-dev-18 && \
+	update-ca-certificates
 
 # 安装 pgvector 插件
 RUN BASE="https://github.com/pgvector/pgvector.git"; \

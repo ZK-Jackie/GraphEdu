@@ -15,8 +15,8 @@ services:
       context: ..
       dockerfile: docker/pg/Dockerfile
       args:
-        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
-        GITHUB_PROXY: ${GITHUB_PROXY:-https://gh-proxy.org}
+        APT_MIRROR: ${APT_MIRROR:-}
+        GITHUB_PROXY: ${GITHUB_PROXY:-}
     container_name: graphedu-postgres
     restart: unless-stopped
     environment:
@@ -76,8 +76,8 @@ services:
       context: ..
       dockerfile: docker/backend/Dockerfile
       args:
-        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
-        UV_INDEX_URL: ${UV_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple}
+        APT_MIRROR: ${APT_MIRROR:-}
+        UV_INDEX_URL: ${UV_INDEX_URL:-}
     container_name: graphedu-backend
     init: true
     restart: unless-stopped
@@ -117,8 +117,8 @@ services:
       context: ..
       dockerfile: docker/backend/Dockerfile
       args:
-        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
-        UV_INDEX_URL: ${UV_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple}
+        APT_MIRROR: ${APT_MIRROR:-}
+        UV_INDEX_URL: ${UV_INDEX_URL:-}
     container_name: graphedu-worker
     init: true
     restart: unless-stopped
@@ -150,8 +150,8 @@ services:
       context: ..
       dockerfile: docker/backend/Dockerfile
       args:
-        APT_MIRROR: ${APT_MIRROR:-mirrors.aliyun.com}
-        UV_INDEX_URL: ${UV_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple}
+        APT_MIRROR: ${APT_MIRROR:-}
+        UV_INDEX_URL: ${UV_INDEX_URL:-}
     container_name: graphedu-beat
     init: true
     restart: unless-stopped
@@ -183,7 +183,7 @@ services:
       context: ..
       dockerfile: docker/frontend/Dockerfile
       args:
-        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+        NPM_REGISTRY: ${NPM_REGISTRY:-}
     container_name: graphedu-frontend
     restart: unless-stopped
     ports:
