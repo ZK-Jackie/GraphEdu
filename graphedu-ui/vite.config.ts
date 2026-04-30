@@ -16,8 +16,8 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     build: {
-      sourcemap: true,
-      minify: false,
+      sourcemap: false,
+      minify: 'esbuild',
       // vite 8.0 +，rolldown 与 antdv 4.x 有兼容性问题，待转用 antdv-next 后再更新
       // rolldownOptions: {
       //   output: {
