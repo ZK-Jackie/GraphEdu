@@ -68,6 +68,14 @@ POSTGRES_VERSION=${deploy.images.postgres:18.3.0}
 REDIS_VERSION=${deploy.images.redis:8.6.2-alpine}
 BACKEND_VERSION=${deploy.images.backend:latest}
 FRONTEND_VERSION=${deploy.images.frontend:latest}
+
+# ========================================
+# Docker 构建参数（镜像源加速）
+# ========================================
+APT_MIRROR=${deploy.build.apt_mirror:mirrors.aliyun.com}
+NPM_REGISTRY=${deploy.build.npm_registry:}
+UV_INDEX_URL=${deploy.build.uv_index:https://mirrors.aliyun.com/pypi/simple}
+GITHUB_PROXY=${deploy.build.github_proxy:https://gh-proxy.org}
 """
 
 # ---------------------------------------------------------------------------

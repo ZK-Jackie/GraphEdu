@@ -10,9 +10,16 @@
 # ========================================
 FROM node:22-alpine AS builder
 
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+
 LABEL maintainer="ZK-Jackie"
 LABEL version="0.0.1"
 LABEL description="GraphEdu Frontend"
+
+# 配置 npm 全局镜像源（corepack 下载 pnpm 时也会使用此源）
+RUN if [ -n "$NPM_REGISTRY" ]; then \
+      npm config set registry "$NPM_REGISTRY"; \
+    fi
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -20,7 +27,12 @@ RUN corepack enable
 COPY graphedu-ui/ /app
 WORKDIR /app
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    if [ -n "$NPM_REGISTRY" ]; then \
+      pnpm install --frozen-lockfile --registry "$NPM_REGISTRY"; \
+    else \
+      pnpm install --frozen-lockfile; \
+    fi
 RUN pnpm run build-only
 
 # ========================================

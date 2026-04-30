@@ -246,12 +246,13 @@ vim .env.production
 cd ..
 
 # 4. 生成 Docker 环境变量
+cd docker
+
 # 方式一：使用独立脚本（仅需 Python 3 + PyYAML，无需构建任何镜像）
 pip install pyyaml
-python3 docker/generate-env.py
+python3 generate-env.py -c ../prod.config.yaml
 
 # 方式二：使用 Docker（无需本地 Python，与后端共用 uv 镜像层）
-cd docker
 docker compose --profile env-gen run --rm env-generator
 
 # 5. 构建并启动
