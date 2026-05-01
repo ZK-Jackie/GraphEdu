@@ -1,0 +1,76 @@
+# 前端运行时构建忽略文件（构建上下文：项目根目录）
+# runtime.Dockerfile 仅需 graphedu-ui/dist/ 和 docker/frontend/nginx.conf
+
+# 后端
+graphedu/
+tests/
+
+# 前端源码和依赖（只需 dist/）
+graphedu-ui/node_modules/
+graphedu-ui/src/
+graphedu-ui/public/
+graphedu-ui/*.config.*
+graphedu-ui/package*.json
+graphedu-ui/pnpm-lock.yaml
+graphedu-ui/index.html
+graphedu-ui/CLAUDE.md
+graphedu-ui/.eslintrc*
+graphedu-ui/.prettierrc*
+graphedu-ui/tsconfig*
+graphedu-ui/.vitest/
+graphedu-ui/dist-ssr/
+graphedu-ui/coverage/
+
+# Docker（保留 docker/frontend/nginx.conf）
+docker/backend/
+docker/pg/
+docker/docker-compose*.yaml
+docker/.env
+docker/volumes/
+docker/frontend/Dockerfile
+docker/frontend/Dockerfile.dockerignore
+docker/frontend/dev.graphedu.conf
+docker/frontend/nginx-external.conf
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# 配置
+*config.yaml
+.env
+.env.*
+
+# 数据和日志
+data/
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# 文档
+*.md
+docs/
+LICENSE
+.claude/
+.github/
+
+# 其他
+.cache/
+*.tmp
+*.bak
