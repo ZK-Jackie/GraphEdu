@@ -41,8 +41,5 @@ playwright-report/
 # unprepared files
 e2e/
 
-# production
-.env.production
-
 # claude
 .claude/settings.*.json
