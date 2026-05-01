@@ -90,7 +90,7 @@ jobs:
             echo "::error::Missing secret: SERVER_DEPLOYMENT_PATH"
             MISSING=$((MISSING+1))
           fi
-          [ $MISSING -gt 0 ] && exit 1
+          if [ $MISSING -gt 0 ]; then exit 1; fi
 
       # https://github.com/marketplace/actions/scp-files
       - name: Copy dist to server
