@@ -49,6 +49,7 @@ jobs:
         with:
           node-version: 24
           node-version-file: ./graphedu-ui/package.json
+          cache-dependency-path: ./graphedu-ui/pnpm-lock.yaml
           cache: "pnpm"
 
       - name: Install dependencies
