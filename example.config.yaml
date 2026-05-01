@@ -143,7 +143,7 @@ logging:
   disable_existing_loggers: false
   formatters:
     standard:
-      format: '%(asctime)s.%(msecs)03d - %(levelname)-7s - %(name)-30s - %(message)s'
+      format: '%(asctime)s.%(msecs)03d - %(levelname)-7s - [P:%(process)d/T:%(threadName)s] - %(name)-30s - %(message)s'
       datefmt: '%Y-%m-%d %H:%M:%S'
   handlers:
     console:
@@ -171,7 +171,7 @@ logging:
 #      retries: 3
   root:
     level: INFO
-    handlers: [ 'console', 'daily_file', 'feishu_webhook' ]
+    handlers: [ 'console', 'daily_file' ]
 
 # ============================================
 # 系统配置
