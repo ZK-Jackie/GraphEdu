@@ -38,6 +38,12 @@ if [ ! -f "$PROJECT_DIR/prod.config.yaml" ]; then
   exit 1
 fi
 
+if [ ! -d "$PROJECT_DIR/graphedu-ui/dist" ]; then
+  err "graphedu-ui/dist/ not found."
+  err "Frontend must be built by CI before deployment."
+  exit 1
+fi
+
 # ========================================
 # 2. 拉取最新代码（先拉代码，确保 generate-env.py 等为最新）
 # ========================================

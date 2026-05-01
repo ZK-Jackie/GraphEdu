@@ -181,9 +181,7 @@ services:
     pull_policy: missing
     build:
       context: ..
-      dockerfile: docker/frontend/Dockerfile
-      args:
-        NPM_REGISTRY: ${NPM_REGISTRY:-}
+      dockerfile: docker/frontend/runtime.Dockerfile
     container_name: graphedu-frontend
     restart: unless-stopped
     ports:

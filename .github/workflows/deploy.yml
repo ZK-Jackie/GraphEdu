@@ -29,11 +29,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: graphedu-ui/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: graphedu-ui
+
+      - name: Build
+        run: pnpm run build-only
+        working-directory: graphedu-ui
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: graphedu-ui/dist/
+          retention-days: 1
+
   deploy:
     name: Deploy to Production
+    needs: build-frontend
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: graphedu-ui/dist/
+
       - name: Verify Required Secrets
         run: |
           MISSING=0
@@ -50,6 +84,17 @@ jobs:
             MISSING=$((MISSING+1))
           fi
           [ $MISSING -gt 0 ] && exit 1
+
+      # https://github.com/marketplace/actions/scp-files
+      - name: Copy dist to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "graphedu-ui/dist/*"
+          target: ${{ secrets.SERVER_DEPLOYMENT_PATH }}/graphedu-ui/dist
+          strip_components: 2
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
