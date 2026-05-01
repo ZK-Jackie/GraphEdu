@@ -14,7 +14,7 @@ on:
       - 'graphedu-ui/vitest.config.*'
       - 'graphedu-ui/tsconfig.vitest.json'
       - 'graphedu-ui/.*rc.*'
-      - 'graphedu-ui/.env.*'
+      - 'graphedu-ui/.env.development'
       - 'graphedu-ui/.npmrc'
       - 'graphedu-ui/pnpm-workspace.yaml'
       - '.claude/**'
