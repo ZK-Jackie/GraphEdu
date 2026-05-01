@@ -32,6 +32,7 @@ jobs:
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
+    environment: production
     # https://docs.github.com/zh/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_iddefaults
     defaults: # 本次 job run 的 working-directory
       run:
@@ -74,6 +75,9 @@ jobs:
         with:
           name: frontend-dist
           path: graphedu-ui/dist/
+
+      - name: check dist
+        run: ls -la graphedu-ui/dist/
 
       - name: Verify Required Secrets
         run: |
