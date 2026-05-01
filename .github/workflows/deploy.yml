@@ -32,6 +32,11 @@ jobs:
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
+    # https://docs.github.com/zh/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_iddefaults
+    defaults: # 本次 job run 的 working-directory
+      run:
+        working-directory: ./graphedu-ui
+
     steps:
       - uses: actions/checkout@v4
 
@@ -47,16 +52,14 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: graphedu-ui
 
       - name: Build
         run: pnpm run build-only
-        working-directory: graphedu-ui
 
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: graphedu-ui/dist/
+          path: dist/
           retention-days: 1
 
   deploy:
