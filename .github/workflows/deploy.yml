@@ -35,13 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
         with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: graphedu-ui/pnpm-lock.yaml
+          version: 10
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
