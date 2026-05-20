@@ -16,7 +16,7 @@ RUN apk add --no-cache tzdata && \
     echo "$TZ" > /etc/timezone
 
 # nginx 1.25.x 的 mime.types 不含 .mjs，补上 ES Module MIME 映射
-RUN sed -i 's|application/javascript  js;|application/javascript  js mjs;|' /etc/nginx/mime.types
+COPY docker/frontend/mime.types /etc/nginx/mime.types
 
 COPY graphedu-ui/dist /usr/share/nginx/html
 COPY docker/frontend/nginx.conf /etc/nginx/conf.d/default.conf
