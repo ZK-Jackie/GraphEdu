@@ -248,10 +248,14 @@ const useChatStore = defineStore('chat', () => {
         },
       })
     } catch {
-      awaitingResponse.value = false
-      activeStreams.value--
-      if (activeStreams.value === 0) {
-        sending.value = false
+      // onError 回调已处理状态清理时 awaitingResponse 为 false；
+      // 仅在 onError 未被调用时（如 fetchEventSource 启动前异常）补偿清理
+      if (awaitingResponse.value) {
+        awaitingResponse.value = false
+        activeStreams.value--
+        if (activeStreams.value === 0) {
+          sending.value = false
+        }
       }
       message.error('发送消息失败')
     }

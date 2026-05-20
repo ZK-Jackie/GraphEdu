@@ -286,7 +286,7 @@ class ChatAgent:
 
         thinking_text = response.additional_kwargs.get("reasoning_content") if response.additional_kwargs else None
         if thinking_text:
-            # 思考消息存档
+            # 思考消息：使用独立 ID，避免与 AI 回复 message_id 冲突导致去重丢失
             gm_messages.append(
                 ChatMessage.auto_new_message(
                     role=RoleEnum.THINKING,
@@ -294,14 +294,16 @@ class ChatAgent:
                     content=thinking_text,
                     user_id=user_id,
                     conv_id=conv_id,
-                    message_id=response.id or generate_msg_id(),
+                    message_id=generate_msg_id(),
                 )
             )
 
-        # 有 tool_calls 时（无论是否同时有 content），都只走 lc_messages，
-        # 不放入 gm_messages —— 工具调用是中间步骤，对用户无意义
+        # 有 tool_calls 时只走 lc_messages，但保留已有的思考消息
         if response.tool_calls:
-            return {"lc_messages": [response]}
+            result = {"lc_messages": [response]}
+            if gm_messages:
+                result["gm_messages"] = gm_messages
+            return result
 
         # 纯文本 AI 回复
         gm_messages.append(
@@ -313,7 +315,7 @@ class ChatAgent:
         )
 
         # 返回更新
-        return {"lc_messages": [response], "gm_messages": [gm_messages]}
+        return {"lc_messages": [response], "gm_messages": gm_messages}
 
     async def _check_assessment_node(self, state: ChatState, runtime: Runtime[ChatContext]):
         """检查是否需要触发知识点掌握度评估。
