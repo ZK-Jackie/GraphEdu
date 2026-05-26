@@ -80,7 +80,7 @@ docker compose down --remove-orphans 2>/dev/null || true
 # 5. 构建并启动
 # ========================================
 log "Building and starting services"
-docker compose up -d --build
+docker compose up -d
 
 # ========================================
 # 6. 健康检查
