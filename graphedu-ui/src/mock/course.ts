@@ -2,7 +2,7 @@
  * 课程详情 Mock 数据
  */
 import type { CourseDetailVO } from '@/types/api/education/course'
-import coverDiscrete from '@/assets/mock/discrete.jpeg'
+import coverDiscrete from '@/assets/mock/discrete.png'
 
 export function getCourseDetail(): CourseDetailVO {
   return {

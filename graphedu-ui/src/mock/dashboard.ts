@@ -14,9 +14,9 @@ import type {
 } from '@/types/api/education/stats'
 import { MOCK_STUDENTS } from './constants'
 import { fmtYMD, recentDays, seededRandom } from './helpers'
-import coverDiscrete from '@/assets/mock/discrete.jpeg'
-import coverLinear from '@/assets/mock/linear.jpeg'
-import coverComnet from '@/assets/mock/comnet.jpeg'
+import coverDiscrete from '@/assets/mock/discrete.png'
+import coverLinear from '@/assets/mock/linear.png'
+import coverComnet from '@/assets/mock/comnet.png'
 
 // ==================== 学生端 ====================
 
