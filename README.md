@@ -183,7 +183,7 @@ flowchart LR
 | **图存储**: Apache AGE | **状态**: Pinia 3 / vue-i18n 11.3 | **对象存储**: S3 兼容（阿里云 OSS 等） |
 | **AI**: LangChain + LangGraph + GraphRAG | **PDF**: pdfjs-dist 5.6 | **代码质量**: Ruff + oxlint |
 | **任务队列**: Celery + Redis | **图可视化**: Neo4j NVL | **测试**: pytest + Vitest + Playwright |
-| **缓存**: Redis | **图表**: ECharts 6 | **CI/CD**: GitHub Actions |
+| **缓存**: Redis | **图表**: ECharts 6 | **CI/CD**: GitHub Actions + GHCR |
 
 ---
 
@@ -258,6 +258,37 @@ docker compose --profile env-gen run --rm env-generator
 # 5. 构建并启动
 docker compose up -d --build
 ```
+
+> 日常迭代推荐使用下方的「自动部署（CI/CD）」：由 CI 构建镜像并推送 GHCR，服务器只拉取更新，无需在服务器手动构建。
+
+### 自动部署（CI/CD）
+
+推送到 `master` 会自动触发 GitHub Actions（`.github/workflows/deploy.yml`），按变更范围**选择性构建与部署**——前端变了只发前端，后端变了只发后端，互不牵连、不中断数据库。
+
+| 变更内容 | 构建并推送的镜像 | 部署范围 |
+|---|---|---|
+| 仅前端（`graphedu-ui/**`） | `graphedu-frontend` | 仅 `frontend` |
+| 仅后端（`graphedu/**`、`libs/**`、`pyproject.toml`、`uv.lock`） | `graphedu-backend` | `backend` + `worker1` + `beat`（共享镜像） |
+| Docker 配置 / `prod.config.yaml` | 三个镜像全量构建 | 所有应用服务（全量） |
+| 文档 / 测试 | — | 不触发 |
+
+构建产物推送到 **GHCR 私有仓库**（`ghcr.io/zk-jackie/graphedu-{backend,frontend,postgres}`），生产服务器只 `pull` 不编译。每次构建同时打 `latest` 与 commit `sha` 两个 tag，便于回滚到任意历史版本。
+
+**前置配置（一次性）**：
+
+1. 服务器登录 GHCR（拉取私有镜像）：`docker login ghcr.io -u ZK-Jackie -p <PAT>`（PAT 需 `read:packages` 权限）
+2. 配置 GitHub Secrets：`SERVER_HOST`、`SERVER_USERNAME`、`SERVER_PASSWORD`、`SERVER_DEPLOYMENT_PATH`
+3. 可选 GitHub Variables（CI runner 在境外，留空用官方源通常更快）：`APT_MIRROR`、`UV_INDEX_URL`、`NPM_REGISTRY`、`GITHUB_PROXY`、`POSTGRES_VERSION`
+
+**手动触发**（紧急上线 / 回滚，在服务器项目根目录执行）：
+
+```bash
+bash docker/deploy.sh --target frontend   # 仅前端
+bash docker/deploy.sh --target backend    # 仅后端（backend + worker1 + beat）
+bash docker/deploy.sh --target all        # 全量
+```
+
+> `postgres` / `redis` 不在自动重启范围内（涉及数据卷，需手动 `docker compose up -d --no-deps postgres` 处理）。
 
 ### 手动部署
 

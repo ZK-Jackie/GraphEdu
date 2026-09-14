@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from graphedu.common.exceptions.services.education.graphrag_task import GraphRAGIndexNotBuiltException
 from graphedu.common.exceptions.services.education.knowledge_graph import (
+    KnowledgeGraphChangeStatusFailedException,
     KnowledgeGraphCourseNotFoundException,
     KnowledgeGraphIdListEmptyException,
     KnowledgeGraphNameAlreadyExistsException,
@@ -1071,6 +1072,51 @@ class KnowledgeGraphService:
             graph_id=new_graph.graph_id,
             task_status="pending",
         )
+
+    @staticmethod
+    async def cancel_auto_generate(
+        graph_id: int,
+        query_db: AsyncSession,
+        current_user: CurrentUser,
+    ) -> AutoGenerateSubmitVO:
+        """取消知识图谱自动生成任务。
+
+        先将 task_status 标记为 cancelled，再 revoke Celery 任务（发送 SIGTERM），
+        消除"先撤销后标记"的竞态。任务侧通过协作取消检查（raise_if_cancelled）
+        在下个步骤中断，或由 SIGTERM 强制终止。
+
+        Args:
+            graph_id: 知识图谱ID。
+            query_db: 数据库会话。
+            current_user: 当前用户。
+
+        Returns:
+            AutoGenerateSubmitVO: 更新后的任务状态。
+
+        Raises:
+            KnowledgeGraphNotFoundException: 知识图谱不存在。
+            KnowledgeGraphChangeStatusFailedException: 任务状态不允许取消。
+        """
+        from graphedu.workers.runtime import cancel_celery_task
+
+        graph = await KnowledgeGraphMapper.get_by_id(graph_id, query_db)
+        if not graph:
+            raise KnowledgeGraphNotFoundException(graph_id=graph_id)
+
+        if graph.task_status not in ("pending", "processing"):
+            raise KnowledgeGraphChangeStatusFailedException(
+                graph_id=graph_id,
+                message=f"当前任务状态为 {graph.task_status}，无法取消",
+            )
+
+        async def mark_cancelled():
+            graph.task_status = "cancelled"
+            graph.update_time = datetime.now()
+            await KnowledgeGraphMapper.update(graph, query_db)
+
+        await cancel_celery_task(str(graph_id), mark_cancelled)
+        logger.info("取消知识图谱生成任务: graph_id=%d", graph_id)
+        return AutoGenerateSubmitVO(graph_id=graph_id, task_status="cancelled")
 
     @staticmethod
     async def confirm_graph(

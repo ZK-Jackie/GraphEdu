@@ -133,7 +133,7 @@ FROM tmp_students t
 -- 5. 批量绑定所属部门
 -- ============================================================================
 INSERT INTO sys_user_dept (user_id, dept_id, is_primary)
-SELECT u.user_id, d.dept_id, '1'
+SELECT u.user_id, d.dept_id, 'Y'
 FROM tmp_students t
          INNER JOIN sys_user u ON t.user_name = u.user_name
          INNER JOIN sys_dept d ON t.dept_key = d.dept_key;
@@ -176,7 +176,7 @@ SELECT d.dept_name  AS 学院,
        COUNT(*)     AS 人数
 FROM edu_student s
          INNER JOIN sys_user u ON s.student_id = u.user_id
-         INNER JOIN sys_user_dept ud ON u.user_id = ud.user_id AND ud.is_primary = '1'
+         INNER JOIN sys_user_dept ud ON u.user_id = ud.user_id AND ud.is_primary = 'Y'
          INNER JOIN sys_dept d ON ud.dept_id = d.dept_id
 WHERE u.user_name LIKE 'student%'
 GROUP BY d.dept_name, s.major, s.grade

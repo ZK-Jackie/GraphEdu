@@ -7,7 +7,7 @@
 --    记录学生的学习行为流：提问、兴趣点、章节打开、地图交互等。
 --    仅记录"学生做了什么行为"，不含答题详情（见2）和掌握度评估（见3）。
 --
--- 2. 业务实体表（定义在 3.4education.sql）
+-- 2. 业务实体表（定义在 3.1education.sql）
 --    - edu_course_exercise：习题定义（关联课程和章节）
 --    - edu_exercise_attempt：习题作答详细记录（答案、正确性、用时）
 --
@@ -62,7 +62,7 @@ COMMENT ON COLUMN edu_student_learning_event.course_id IS '课程ID';
 COMMENT ON COLUMN edu_student_learning_event.session_id IS '会话ID';
 COMMENT ON COLUMN edu_student_learning_event.chapter_id IS '关联章节ID';
 COMMENT ON COLUMN edu_student_learning_event.node_uuid IS '知识点业务UUID';
-COMMENT ON COLUMN edu_student_learning_event.event_type IS '事件类型（question/interest/explain_request/map_click/tool_map_query/chapter_open）';
+COMMENT ON COLUMN edu_student_learning_event.event_type IS '事件类型（question/interest/explain_request/map_click/tool_map_query/chapter_open/resource_view/resource_progress/resource_complete/revisit/chapter_progress/ai_assess）';
 COMMENT ON COLUMN edu_student_learning_event.event_source IS '事件来源（chat/ui/tool/system）';
 COMMENT ON COLUMN edu_student_learning_event.event_content IS '事件文本内容（question类型存用户原始问题）';
 COMMENT ON COLUMN edu_student_learning_event.event_payload IS '事件扩展数据（JSONB，按事件类型存储附加信息）';
@@ -117,7 +117,7 @@ COMMENT ON COLUMN edu_student_mastery.node_uuid IS '知识点业务UUID';
 COMMENT ON COLUMN edu_student_mastery.session_id IS '触发评估的会话ID';
 COMMENT ON COLUMN edu_student_mastery.mastery_score IS '掌握度评分（0-100）';
 COMMENT ON COLUMN edu_student_mastery.mastery_level IS '掌握等级（unknown/low/medium/high）';
-COMMENT ON COLUMN edu_student_mastery.trigger_type IS '触发类型（quiz_complete/periodic/manual/system）';
+COMMENT ON COLUMN edu_student_mastery.trigger_type IS '触发类型（chat_round/quiz_complete/periodic/manual/system）';
 COMMENT ON COLUMN edu_student_mastery.assessed_at IS '评估时间';
 COMMENT ON COLUMN edu_student_mastery.status IS '状态（0正常 1停用 2已删除）';
 
@@ -306,4 +306,4 @@ GROUP BY rp.student_id, c.course_id, rp.chapter_id, cr.total_resources;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_chapter_progress_pk ON mv_chapter_progress (student_id, chapter_id);
 CREATE INDEX IF NOT EXISTS idx_mv_chapter_progress_course ON mv_chapter_progress (course_id);
 CREATE INDEX IF NOT EXISTS idx_mv_chapter_progress_completed ON mv_chapter_progress (is_completed);
-COMMENT ON MATERIALIZED VIEW mv_chapter_progress IS '章节学习进度物化视图（从学生资料阅读进度聚合而来，定期刷新）';
+COMMENT ON MATERIALIZED VIEW mv_chapter_progress IS '章节学习进度物化视图（从学生资料阅读进度聚合而来，资料进度上报时触发式刷新：REFRESH MATERIALIZED VIEW CONCURRENTLY）';

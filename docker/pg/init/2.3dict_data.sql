@@ -349,3 +349,8 @@ VALUES (1, '待处理', '0', 'text_processing_status', 'default', 'Y', '文本�
        (3, '处理成功', '2', 'text_processing_status', 'success', 'N', '文本处理成功'),
        (4, '处理失败', '3', 'text_processing_status', 'error', 'N', '文本处理失败'),
        (9, '无需处理', '9', 'text_processing_status', 'default', 'N', '文本无需处理');
+
+-- 补充图谱构建方法：graphrag_assisted（系统自动生成图谱时使用，见 knowledge_graph.py）
+INSERT INTO sys_dict_data (dict_sort, dict_label, dict_value, dict_type, color, is_default, remark)
+VALUES (10, 'GraphRAG辅助构建', 'graphrag_assisted', 'kg_build_method', 'default', 'N',
+        '基于 GraphRAG 的知识图谱辅助构建，系统自动生成图谱时使用');

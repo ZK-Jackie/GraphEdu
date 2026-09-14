@@ -89,3 +89,82 @@ class ExerciseKnowledgePointMapper:
         result = await db_session.execute(stmt)
         await db_session.flush()
         return result.rowcount
+
+    @staticmethod
+    async def get_by_exercise_id(exercise_id: int, db_session: AsyncSession) -> list[EduExerciseKnowledgePoint]:
+        """获取题目已绑定的知识点关联。
+
+        :param db_session: 数据库会话
+        :param exercise_id: 习题 ID
+        :return: 关联记录列表
+        """
+        from sqlalchemy import select
+
+        stmt = select(EduExerciseKnowledgePoint).where(EduExerciseKnowledgePoint.exercise_id == exercise_id)
+        result = await db_session.execute(stmt)
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def create_association(
+        exercise_id: int,
+        node_uuid: UUID,
+        db_session: AsyncSession,
+        source: str = "manual",
+        relevance_score: float = 0,
+    ) -> EduExerciseKnowledgePoint:
+        """创建题目-知识点关联（教师绑定时调用）。
+
+        :param db_session: 数据库会话
+        :param exercise_id: 习题 ID
+        :param node_uuid: 知识点业务 UUID
+        :param source: 关联来源（manual 手动）
+        :param relevance_score: 相关性评分
+        :return: 创建的关联记录
+        """
+        association = EduExerciseKnowledgePoint(
+            exercise_id=exercise_id,
+            node_uuid=node_uuid,
+            source=source,
+            relevance_score=relevance_score,
+        )
+        db_session.add(association)
+        await db_session.flush()
+        return association
+
+    @staticmethod
+    async def delete_by_exercise_and_node(exercise_id: int, node_uuid: UUID, db_session: AsyncSession) -> int:
+        """删除指定题目与指定知识点的关联（教师解绑时调用）。
+
+        :param db_session: 数据库会话
+        :param exercise_id: 习题 ID
+        :param node_uuid: 知识点业务 UUID
+        :return: 删除的行数
+        """
+        stmt = delete(EduExerciseKnowledgePoint).where(
+            EduExerciseKnowledgePoint.exercise_id == exercise_id,
+            EduExerciseKnowledgePoint.node_uuid == node_uuid,
+        )
+        result = await db_session.execute(stmt)
+        await db_session.flush()
+        return result.rowcount
+
+    @staticmethod
+    async def has_manual_association(exercise_id: int, db_session: AsyncSession) -> bool:
+        """检查题目是否已有手动绑定的知识点（推荐任务据此跳过，不覆盖教师决策）。
+
+        :param db_session: 数据库会话
+        :param exercise_id: 习题 ID
+        :return: 是否已有 manual 关联
+        """
+        from sqlalchemy import func, select
+
+        stmt = (
+            select(func.count())
+            .select_from(EduExerciseKnowledgePoint)
+            .where(
+                EduExerciseKnowledgePoint.exercise_id == exercise_id,
+                EduExerciseKnowledgePoint.source == "manual",
+            )
+        )
+        result = await db_session.execute(stmt)
+        return (result.scalar() or 0) > 0

@@ -356,9 +356,9 @@ class GraphRAGTaskService:
         if task_orm.task_status not in ["pending", "processing"]:
             raise GraphRAGBuildTaskCannotCancelException(current_status=task_orm.task_status)
 
-        # 撤销 Celery 任务
-        celery_app.control.revoke(str(task_id), terminate=True)
-
+        # 先将 DB 标记为 cancelled，再 revoke 发送 SIGTERM。
+        # 顺序很关键：若先 revoke，任务可能在 DB 尚未标记时被 SIGTERM 中断，
+        # 进入异常处理后 _check_task_cancelled 读不到 cancelled 而误判为失败并重试（取消"复活"）。
         await GraphRAGTaskMapper.update_status(
             task_id,
             db,
@@ -367,6 +367,10 @@ class GraphRAGTaskService:
             end_time=datetime.now(),
             update_by=_safe_user_id(current_user),
         )
+
+        # 撤销 Celery 任务：发送 SIGTERM；协作式取消已在 callback 内通过 is_revoked 生效
+        celery_app.control.revoke(str(task_id), terminate=True)
+
         logger.info("取消 GraphRAG 构建任务成功，任务ID: %s", task_id)
         return True
 

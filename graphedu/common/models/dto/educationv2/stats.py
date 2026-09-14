@@ -1,20 +1,10 @@
 """统计 DTO 模型。"""
+
 from datetime import date, datetime
-from typing import Literal
 
 from pydantic import Field
 
 from graphedu.common.models.dto.base import PageQuery
-
-
-class ChapterProgressQueryDTO(PageQuery):
-    """章节进度查询 DTO（查询物化视图）"""
-
-    student_id: int | None = Field(default=None, description="学生ID")
-    chapter_id: int | None = Field(default=None, description="章节ID")
-    is_completed: Literal["Y", "N"] | None = Field(default=None, description="是否完成（Y/N）")
-    begin_time: datetime | None = Field(default=None, description="开始时间")
-    end_time: datetime | None = Field(default=None, description="结束时间")
 
 
 class StudyAnalyticsQueryDTO(PageQuery):

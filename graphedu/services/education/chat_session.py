@@ -31,6 +31,7 @@ from graphedu.common.models.vo.educationv2.chat import ChatSessionDetailVO, Chat
 from graphedu.common.resource import AsyncPostgresqlClient
 from graphedu.common.utils.uuids import uuid7_str
 from graphedu.mapper.education.chat_session import ChatSessionMapper
+from graphedu.mapper.education.graphrag_task import GraphRAGTaskMapper
 from graphedu.services.agent.chat_agent import ChatAgent
 
 logger = logging.getLogger(__name__)
@@ -320,10 +321,14 @@ class ChatSessionService:
         conv_id = chat_message.conv_id
 
         try:
-            # 1. 短事务：验证会话存在
+            # 1. 短事务：验证会话存在，并查询当前课程已启用的 GraphRAG 任务
+            graphrag_task_id = None
             async with db_client.session_context() as query_db:
                 session = await _check_session_exists(conv_id, user_id, query_db)
                 course_id = session.course_id
+                if course_id:
+                    enabled_task = await GraphRAGTaskMapper.get_enabled_task_for_course(course_id, query_db)
+                    graphrag_task_id = enabled_task.task_id if enabled_task else None
 
             # 2. 检查 Agent 是否已初始化
             if not chat_agent.is_initialized():
@@ -341,6 +346,7 @@ class ChatSessionService:
                 user_id=user_id,
                 conv_id=conv_id,
                 course_id=course_id,
+                graphrag_task_id=graphrag_task_id,
             )
 
             # 5. 准备输入值

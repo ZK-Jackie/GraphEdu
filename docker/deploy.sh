@@ -1,17 +1,31 @@
 #!/usr/bin/env bash
 # GraphEdu 生产环境部署脚本
-# 用法: ./docker/deploy.sh [-v] [项目根目录]
+# 用法: ./docker/deploy.sh [-v] [--target frontend|backend|all] [项目根目录]
+#
+# 选择性部署（前端/后端互不牵连，不停数据库）：
+#   --target frontend  仅部署前端 (frontend)
+#   --target backend   仅部署后端 (backend worker1 beat，三者共享同一镜像)
+#   --target all       部署所有应用服务 (frontend backend worker1 beat)，不含 postgres/redis
+#
+# 默认 --target all。
+# postgres / redis 不在本脚本自动重启范围内（涉及数据卷，需手动处理）。
 set -euo pipefail
 
 # 解析参数
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 VERBOSE=0
+TARGET="all"
 while [[ $# -gt 0 ]]; do
   case $1 in
     -v|--verbose) VERBOSE=1; shift ;;
+    --target)
+      [[ $# -ge 2 ]] || { echo "::error::--target 缺少参数" >&2; exit 1; }
+      TARGET="$2"; shift 2 ;;
+    --target=*) TARGET="${1#*=}"; shift ;;
     -h|--help)
-      echo "用法: $0 [-v|--verbose] [项目根目录]"
+      echo "用法: $0 [-v|--verbose] [--target frontend|backend|all] [项目根目录]"
       echo "  默认项目根目录: $(dirname "$0")/.."
+      echo "  默认 --target all"
       exit 0 ;;
     *) PROJECT_DIR="$(cd "$1" && pwd)"; shift ;;
   esac
@@ -22,10 +36,18 @@ log()  { echo ">>> $*"; }
 warn() { echo "::warning::$*"; }
 err()  { echo "::error::$*" >&2; }
 
+# target → 服务集合
+case "$TARGET" in
+  frontend) SERVICES=(frontend) ;;
+  backend)  SERVICES=(backend worker1 beat) ;;
+  all)      SERVICES=(frontend backend worker1 beat) ;;
+  *) err "unknown --target: $TARGET (可选: frontend|backend|all)"; exit 1 ;;
+esac
+
 # ========================================
 # 1. 预检
 # ========================================
-log "Pre-flight checks"
+log "Pre-flight checks (target: $TARGET)"
 
 if [ ! -d "$PROJECT_DIR/.git" ]; then
   err "$PROJECT_DIR is not a git repository."
@@ -38,14 +60,8 @@ if [ ! -f "$PROJECT_DIR/prod.config.yaml" ]; then
   exit 1
 fi
 
-if [ ! -d "$PROJECT_DIR/graphedu-ui/dist" ]; then
-  err "graphedu-ui/dist/ not found."
-  err "Frontend must be built by CI before deployment."
-  exit 1
-fi
-
 # ========================================
-# 2. 拉取最新代码（先拉代码，确保 generate-env.py 等为最新）
+# 2. 拉取最新代码（先拉代码，确保 compose / generate-env.py 等为最新）
 # ========================================
 cd "$PROJECT_DIR"
 PREV_COMMIT=$(git rev-parse --short HEAD)
@@ -59,7 +75,7 @@ if [ "$PREV_COMMIT" = "$CURR_COMMIT" ]; then
 fi
 
 # ========================================
-# 3. 生成 .env（使用最新的 generate-env.py）
+# 3. 生成 .env（一次性容器，不影响其他在运行的服务）
 # ========================================
 cd "$DOCKER_DIR"
 log "Generating .env from prod.config.yaml"
@@ -71,19 +87,18 @@ if [ ! -f ".env" ]; then
 fi
 
 # ========================================
-# 4. 停止现有服务（释放资源）
+# 4. 拉取最新镜像并重启目标服务
+#    --no-deps：不启动/重启依赖（postgres/redis 及未变更服务原状不动）
+#    注意：不再执行 docker compose down，避免中断所有服务。
 # ========================================
-log "Stopping existing services"
-docker compose down --remove-orphans 2>/dev/null || true
+log "Pulling images for: ${SERVICES[*]}"
+docker compose pull "${SERVICES[@]}"
+
+log "Starting services (no-deps): ${SERVICES[*]}"
+docker compose up -d --no-deps "${SERVICES[@]}"
 
 # ========================================
-# 5. 构建并启动
-# ========================================
-log "Building and starting services"
-docker compose up -d
-
-# ========================================
-# 6. 健康检查
+# 5. 健康检查（仅针对本次部署的服务）
 # ========================================
 HEALTH_TIMEOUT=180
 HEALTH_INTERVAL=10
@@ -91,32 +106,32 @@ ELAPSED=0
 
 log "Waiting for services (timeout: ${HEALTH_TIMEOUT}s)"
 while [ $ELAPSED -lt $HEALTH_TIMEOUT ]; do
-  FAILED=$(docker compose ps --format '{{.Status}}' 2>/dev/null | grep -ci 'exited\|unhealthy\|dead' || true)
+  FAILED=$(docker compose ps --format '{{.Status}}' "${SERVICES[@]}" 2>/dev/null | grep -ci 'exited\|unhealthy\|dead' || true)
   if [ "$FAILED" -eq 0 ]; then
-    UNHEALTHY=$(docker compose ps --format '{{.Health}}' 2>/dev/null | grep -cv 'healthy\|^$' || true)
+    UNHEALTHY=$(docker compose ps --format '{{.Health}}' "${SERVICES[@]}" 2>/dev/null | grep -cv 'healthy\|^$' || true)
     if [ "$UNHEALTHY" -eq 0 ]; then
-      log "All services are healthy!"
+      log "Target services are healthy!"
       break
     fi
   fi
 
-  [ $VERBOSE -eq 1 ] && docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Health}}" 2>/dev/null
+  [ $VERBOSE -eq 1 ] && docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Health}}" "${SERVICES[@]}" 2>/dev/null
   sleep $HEALTH_INTERVAL
   ELAPSED=$((ELAPSED + HEALTH_INTERVAL))
 done
 
 if [ $ELAPSED -ge $HEALTH_TIMEOUT ]; then
   warn "Health check timed out after ${HEALTH_TIMEOUT}s"
-  docker compose ps
-  docker compose logs --tail=30
+  docker compose ps "${SERVICES[@]}"
+  docker compose logs --tail=30 "${SERVICES[@]}"
   err "Deployment may be unhealthy."
   exit 1
 fi
 
 # ========================================
-# 7. 清理 & 汇总
+# 6. 清理 & 汇总
 # ========================================
 docker image prune -f > /dev/null
 
-log "Deployment complete! ($CURR_COMMIT)"
-docker compose ps
+log "Deployment complete! ($CURR_COMMIT, target: $TARGET)"
+docker compose ps "${SERVICES[@]}"

@@ -473,6 +473,22 @@ async def submit_auto_generate(
     return ResponseUtil.success(data=result)
 
 
+@knowledge_graph_controller.post(
+    "/{graph_id}/cancel",
+    response_model=ResponseType[AutoGenerateSubmitVO],
+    dependencies=[Depends(SecurityService.get_current_user)],
+    summary="取消知识图谱自动生成任务",
+)
+async def cancel_auto_generate(
+    graph_id: int = Path(..., description="知识图谱ID"),
+    query_db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(SecurityService.get_current_user),
+):
+    """取消进行中的知识图谱自动生成任务（先标记 cancelled，再撤销 Celery 任务）。"""
+    result = await KnowledgeGraphService.cancel_auto_generate(graph_id, query_db, current_user)
+    return ResponseUtil.success(data=result)
+
+
 @knowledge_graph_controller.put(
     "/{graph_id}/confirm",
     response_model=ResponseType[KnowledgeGraphDetailVO],
@@ -487,4 +503,3 @@ async def confirm_knowledge_graph(
     """教师审核编辑完成后，将草稿知识图谱标记为已确认。"""
     result = await KnowledgeGraphService.confirm_graph(graph_id, query_db, current_user)
     return ResponseUtil.success(data=result)
-

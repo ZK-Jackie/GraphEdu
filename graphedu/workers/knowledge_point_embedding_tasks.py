@@ -15,6 +15,9 @@ from graphedu.workers.celery import celery_app
 logger = logging.getLogger(__name__)
 
 _BATCH_SIZE = 32
+_MAX_COURSES_PER_RUN = 50
+"""sync_all 每轮最多派发的课程数，避免瞬间堆积压垮 worker / 触发 embedding API 限流。
+超出部分由下轮 beat 补偿（populate 幂等，重复执行无害）。"""
 
 
 @celery_app.task(bind=True, name="graphedu.workers.populate_knowledge_point_embeddings", max_retries=1)
@@ -114,13 +117,25 @@ def sync_all_pending_embeddings():
             logger.info("无活跃课程，跳过 embedding 同步")
             return {"status": "skipped", "reason": "无活跃课程", "dispatched": 0}
 
-        dispatched = 0
-        for cid in course_ids:
+        # 限流：每轮最多派发 _MAX_COURSES_PER_RUN 个，避免瞬间堆积压垮 worker / 触发 embedding API 限流。
+        # 超出的课程由下轮 beat 补偿（populate 幂等，重复执行无害）。
+        to_dispatch = course_ids[:_MAX_COURSES_PER_RUN]
+        skipped = len(course_ids) - len(to_dispatch)
+        for cid in to_dispatch:
             populate_knowledge_point_embeddings.apply_async(args=[cid])
-            dispatched += 1
 
-        logger.info("Embedding 定时同步: 扫描 %d 个课程, 派发 %d 个任务", len(course_ids), dispatched)
-        return {"status": "ok", "total_courses": len(course_ids), "dispatched": dispatched}
+        logger.info(
+            "Embedding 定时同步: 扫描 %d 个课程, 派发 %d 个任务, 跳过 %d 个(下轮补偿)",
+            len(course_ids),
+            len(to_dispatch),
+            skipped,
+        )
+        return {
+            "status": "ok",
+            "total_courses": len(course_ids),
+            "dispatched": len(to_dispatch),
+            "skipped": skipped,
+        }
 
     asyncio_run_kwargs = {}
     if sys.platform == "win32":

@@ -7,7 +7,7 @@ services:
   # ========================================
   postgres:
     # 使用自定义镜像（包含 pgvector、age 扩展）
-    image: jackiey101/graphedu-postgres:${POSTGRES_VERSION:-18.3.0}
+    image: ghcr.io/zk-jackie/graphedu-postgres:${POSTGRES_VERSION:-18.3.0}
     profiles:
       - postgres
     pull_policy: missing
@@ -70,7 +70,7 @@ services:
   # prod.config.yaml > dev.config.yaml > *.config.yaml > config.yaml
   # ========================================
   backend:
-    image: jackiey101/graphedu-backend:${BACKEND_VERSION:-latest}
+    image: ghcr.io/zk-jackie/graphedu-backend:latest
     profiles:
       - backend
     pull_policy: missing
@@ -111,7 +111,7 @@ services:
   # 与 backend 共用同一镜像，以不同命令启动
   # ========================================
   worker1:
-    image: jackiey101/graphedu-backend:${BACKEND_VERSION:-latest}
+    image: ghcr.io/zk-jackie/graphedu-backend:latest
     profiles:
       - worker
     pull_policy: missing
@@ -144,7 +144,7 @@ services:
   # 与 backend 共用同一镜像，以不同命令启动
   # ========================================
   beat:
-    image: jackiey101/graphedu-backend:${BACKEND_VERSION:-latest}
+    image: ghcr.io/zk-jackie/graphedu-backend:latest
     profiles:
       - beat
     pull_policy: missing
@@ -177,13 +177,13 @@ services:
   # SSL / Gzip / Brotli 等高级功能请在外层代理（宿主机 Nginx / Caddy / Traefik）中配置
   # ========================================
   frontend:
-    image: jackiey101/graphedu-frontend:${FRONTEND_VERSION:-latest}
+    image: ghcr.io/zk-jackie/graphedu-frontend:latest
     profiles:
       - frontend
     pull_policy: missing
     build:
       context: ..
-      dockerfile: docker/frontend/runtime.Dockerfile
+      dockerfile: docker/frontend/Dockerfile
     container_name: graphedu-frontend
     restart: unless-stopped
     ports:

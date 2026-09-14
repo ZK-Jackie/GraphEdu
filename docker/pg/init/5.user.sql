@@ -66,7 +66,7 @@ WHERE user_name = 'student001';
 
 -- 学生部门绑定 → 计算机学院
 INSERT INTO public.sys_user_dept (user_id, dept_id, is_primary)
-SELECT u.user_id, d.dept_id, '1'
+SELECT u.user_id, d.dept_id, 'Y'
 FROM public.sys_user u,
      public.sys_dept d
 WHERE u.user_name = 'student001'
@@ -95,7 +95,7 @@ WHERE user_name = 'teacher001';
 
 -- 教师部门绑定 → 计算机学院
 INSERT INTO public.sys_user_dept (user_id, dept_id, is_primary)
-SELECT u.user_id, d.dept_id, '1'
+SELECT u.user_id, d.dept_id, 'Y'
 FROM public.sys_user u,
      public.sys_dept d
 WHERE u.user_name = 'teacher001'

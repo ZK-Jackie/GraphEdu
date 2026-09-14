@@ -1,11 +1,14 @@
 """课程练习管理 API 控制器。"""
 
+from uuid import UUID
+
 from fastapi import APIRouter, Body, Depends, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from graphedu.common.models.bo import CurrentUser
 from graphedu.common.models.constants import SystemConstants as SysConst
 from graphedu.common.models.dto.educationv2.course_exercise import (
+    BindKnowledgePointDTO,
     CourseExerciseBatchGenerateDTO,
     CourseExerciseCreateDTO,
     CourseExerciseQueryDTO,
@@ -17,6 +20,7 @@ from graphedu.common.models.vo.educationv2.course_exercise import (
     CourseExerciseGenerateProgressVO,
     CourseExerciseGenerateTaskVO,
     CourseExerciseListVO,
+    ExerciseKnowledgePointVO,
 )
 from graphedu.common.resource.deps import get_db
 from graphedu.security.aspect.interface_auth import CheckUserInterfacePermit
@@ -120,6 +124,64 @@ async def get_generate_progress(
     """查询 AI 出题异步任务进度。"""
     result = await CourseExerciseService.get_generate_progress(task_id)
     return ResponseUtil.success(data=result)
+
+
+@course_exercise_controller.post(
+    "/generate-cancel/{task_id}",
+    dependencies=[Depends(CheckUserInterfacePermit("education:course-exercise:edit"))],
+    response_model=ResponseType[CourseExerciseGenerateTaskVO],
+)
+async def cancel_generate_exercises(
+    task_id: str = Path(..., description="异步任务 ID"),
+):
+    """取消 AI 出题异步任务。"""
+    result = await CourseExerciseService.cancel_generate_task(task_id)
+    return ResponseUtil.success(data=result)
+
+
+@course_exercise_controller.get(
+    "/{exercise_id}/knowledge-points",
+    dependencies=[Depends(CheckUserInterfacePermit("education:course-exercise:query"))],
+    response_model=ResponseType[list[ExerciseKnowledgePointVO]],
+)
+async def get_exercise_knowledge_points(
+    exercise_id: int = Path(..., description="习题ID"),
+    query_db: AsyncSession = Depends(get_db),
+):
+    """获取题目的知识点关联（已绑定 + AI 候选推荐）。"""
+    result = await CourseExerciseService.get_knowledge_points(exercise_id, query_db)
+    return ResponseUtil.success(data=result)
+
+
+@course_exercise_controller.post(
+    "/{exercise_id}/knowledge-points",
+    dependencies=[Depends(CheckUserInterfacePermit("education:course-exercise:edit"))],
+    response_model=ResponseType[Empty],
+)
+async def bind_exercise_knowledge_point(
+    exercise_id: int = Path(..., description="习题ID"),
+    dto: BindKnowledgePointDTO = Body(),
+    query_db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(SecurityService.get_current_user),
+):
+    """教师手动绑定知识点到题目。"""
+    await CourseExerciseService.bind_knowledge_point(exercise_id, dto.node_uuid, query_db, dto.relevance_score)
+    return ResponseUtil.success()
+
+
+@course_exercise_controller.delete(
+    "/{exercise_id}/knowledge-points/{node_uuid}",
+    dependencies=[Depends(CheckUserInterfacePermit("education:course-exercise:edit"))],
+    response_model=ResponseType[Empty],
+)
+async def unbind_exercise_knowledge_point(
+    exercise_id: int = Path(..., description="习题ID"),
+    node_uuid: UUID = Path(..., description="知识点业务 UUID"),
+    query_db: AsyncSession = Depends(get_db),
+):
+    """教师解绑题目的知识点。"""
+    await CourseExerciseService.unbind_knowledge_point(exercise_id, node_uuid, query_db)
+    return ResponseUtil.success()
 
 
 @course_exercise_controller.get(

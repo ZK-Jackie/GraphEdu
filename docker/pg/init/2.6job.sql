@@ -81,3 +81,53 @@ COMMENT ON COLUMN sys_job_log.create_time IS '创建时间';
 CREATE INDEX idx_sys_job_log_job_id ON sys_job_log(job_id);
 CREATE INDEX idx_sys_job_log_status ON sys_job_log(status);
 CREATE INDEX idx_sys_job_log_create_time ON sys_job_log(create_time);
+
+
+-- ============================================================================
+-- 3. 通用异步任务表 (sys_async_task)
+-- ============================================================================
+-- 所有需要异步执行且需要持久化状态跟踪的任务统一使用此表，通过 task_type 区分业务类型。
+-- 对应 ORM：graphedu/common/models/orm/system.py 的 SysAsyncTask
+CREATE TABLE IF NOT EXISTS sys_async_task (
+    task_id          BIGSERIAL    PRIMARY KEY,
+    task_name        VARCHAR(255) NOT NULL,
+    task_type        VARCHAR(64)  NOT NULL,
+    task_status      VARCHAR(32)  NOT NULL DEFAULT 'pending',
+    celery_task_id   VARCHAR(255),
+    task_params      JSONB,
+    task_result      JSONB,
+    task_message     VARCHAR(2000),
+    progress_percent SMALLINT              DEFAULT 0,
+    user_id          BIGINT,
+    start_time       TIMESTAMP,
+    end_time         TIMESTAMP,
+    status           CHAR(1)      NOT NULL DEFAULT '0',
+    create_by        BIGINT                DEFAULT NULL,
+    create_time      TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
+    update_by        BIGINT                DEFAULT NULL,
+    update_time      TIMESTAMP             DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE sys_async_task IS '通用异步任务表';
+COMMENT ON COLUMN sys_async_task.task_id IS '任务ID';
+COMMENT ON COLUMN sys_async_task.task_name IS '任务名称（人类可读）';
+COMMENT ON COLUMN sys_async_task.task_type IS '任务类型标识';
+COMMENT ON COLUMN sys_async_task.task_status IS '任务状态（pending/processing/success/failed/cancelled）';
+COMMENT ON COLUMN sys_async_task.celery_task_id IS 'Celery 任务 ID';
+COMMENT ON COLUMN sys_async_task.task_params IS '任务输入参数（JSON）';
+COMMENT ON COLUMN sys_async_task.task_result IS '任务输出结果（JSON）';
+COMMENT ON COLUMN sys_async_task.task_message IS '进度描述或错误信息';
+COMMENT ON COLUMN sys_async_task.progress_percent IS '进度百分比（0-100）';
+COMMENT ON COLUMN sys_async_task.user_id IS '提交者用户ID';
+COMMENT ON COLUMN sys_async_task.start_time IS '开始执行时间';
+COMMENT ON COLUMN sys_async_task.end_time IS '完成时间';
+COMMENT ON COLUMN sys_async_task.status IS '数据状态，对照 sys_data_status（0正常 1停用 2已删除）';
+COMMENT ON COLUMN sys_async_task.create_by IS '创建者';
+COMMENT ON COLUMN sys_async_task.create_time IS '创建时间';
+COMMENT ON COLUMN sys_async_task.update_by IS '更新者';
+COMMENT ON COLUMN sys_async_task.update_time IS '更新时间';
+
+CREATE INDEX idx_sys_async_task_type ON sys_async_task (task_type);
+CREATE INDEX idx_sys_async_task_status ON sys_async_task (task_status);
+CREATE INDEX idx_sys_async_task_user_id ON sys_async_task (user_id);
+CREATE INDEX idx_sys_async_task_create_time ON sys_async_task (create_time);

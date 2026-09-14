@@ -1,0 +1,33 @@
+# GraphEdu 生产环境 Docker Compose 配置
+# 使用方法: docker compose -f docker/docker-compose.yaml up -d
+
+services:
+  # ========================================
+  # Celery Worker 异步任务执行服务
+  # 与 backend 共用同一镜像，以不同命令启动
+  # ========================================
+  worker2:
+    image: ghcr.io/zk-jackie/graphedu-backend:latest
+    profiles:
+      - worker
+    pull_policy: missing
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    container_name: graphedu-worker
+    init: true
+    restart: unless-stopped
+    volumes:
+      - ./volumes/worker2-data:/app/data
+      - ../prod.config.yaml:/app/prod.config.yaml:ro
+#      - ../dev.config.yaml:/app/dev.config.yaml:ro
+    command: ["uv", "run", "-m", "graphedu", "worker", "start"]
+    networks:
+      - graphedu-network
+
+# ========================================
+# 网络配置
+# ========================================
+networks:
+  graphedu-network:
+    driver: bridge

@@ -154,8 +154,9 @@ COMMENT ON COLUMN sys_role.remark IS '备注';
 CREATE INDEX idx_sys_role_role_key ON sys_role (role_key);
 CREATE INDEX idx_sys_role_sort ON sys_role (role_sort);
 
--- 设置角色ID起始值从10开始（role_id < 10 为系统超级管理员角色）
-ALTER SEQUENCE sys_role_role_id_seq RESTART WITH 11;
+-- 设置角色ID序列起始值：预置角色已占用 1（admin）/11（teacher）/12（student），
+-- 故新建角色从 13 开始自增，避免与预置角色主键冲突（role_id < 10 仍保留给系统超级管理员）
+ALTER SEQUENCE sys_role_role_id_seq RESTART WITH 13;
 
 -- ============================================================================
 -- 5. 用户和角色关联表

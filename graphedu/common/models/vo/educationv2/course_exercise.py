@@ -1,6 +1,7 @@
 """课程练习相关 VO 模型。"""
 
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import Field
 
@@ -69,3 +70,15 @@ class ExerciseAttemptStatisticsVO(VO):
     correct_count: int = Field(description="正确次数")
     correct_rate: float = Field(description="正确率（0-100）")
     avg_time_spent: float | None = Field(default=None, description="平均用时（秒）")
+
+
+class ExerciseKnowledgePointVO(VO):
+    """题目-知识点关联 VO（含已绑定与候选推荐）"""
+
+    node_uuid: UUID = Field(description="知识点业务 UUID")
+    title: str | None = Field(default=None, description="知识点标题")
+    relevance_score: float = Field(default=0, description="相关度评分（0-1）")
+    is_suggested: bool = Field(
+        default=False,
+        description="是否为候选推荐（True=AI 候选未确认，False=教师已绑定）",
+    )

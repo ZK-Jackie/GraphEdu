@@ -1,6 +1,8 @@
 """课程练习相关 DTO 模型。"""
+
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import Field
 
@@ -72,3 +74,10 @@ class ExerciseAttemptQueryDTO(PageQuery):
     student_id: int | None = Field(default=None, description="学生ID")
     course_id: int | None = Field(default=None, description="课程ID（通过习题间接关联）")
     is_correct: bool | None = Field(default=None, description="是否正确")
+
+
+class BindKnowledgePointDTO(DTO):
+    """绑定知识点到题目 DTO（教师手动关联）"""
+
+    node_uuid: UUID = Field(description="知识点业务 UUID")
+    relevance_score: float = Field(default=0, ge=0, le=1, description="相关度评分（0-1，可选）")

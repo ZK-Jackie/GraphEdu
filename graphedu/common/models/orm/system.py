@@ -303,14 +303,14 @@ class SysUpload(SystemBase):
         nullable=True,
         comment="文件分类，对照 sys_upload_file_category（1头像 2课程封面 3书籍封面 4书籍文件 5笔记附件 6作业 7课件）",
     )
-    storage_type: Mapped[int] = mapped_column(
+    storage_type: Mapped[str] = mapped_column(
         String(2),
         nullable=False,
         default="1",
         comment="存储类型，对照 sys_upload_storage_type（1OSS存储 2本地存储 3CDN存储）",
     )
     # 访问控制
-    access_level: Mapped[int] = mapped_column(
+    access_level: Mapped[str] = mapped_column(
         CHAR(1), nullable=False, default="1", comment="访问级别，对照 sys_upload_access_level（1私有 2登录 3公开）"
     )
     download_flag: Mapped[str] = mapped_column(
@@ -420,7 +420,7 @@ class SysOperLog(SystemBase):
 
     oper_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True, comment="日志主键")
     title: Mapped[str] = mapped_column(String(50), nullable=False, default="", comment="模块标题")
-    business_type: Mapped[int] = mapped_column(
+    business_type: Mapped[str] = mapped_column(
         CHAR(1),
         nullable=False,
         default="0",
@@ -441,7 +441,7 @@ class SysOperLog(SystemBase):
     oper_location: Mapped[str] = mapped_column(String(255), nullable=False, default="", comment="操作地点")
     oper_param: Mapped[str] = mapped_column(String(2000), nullable=False, default="", comment="请求参数")
     json_result: Mapped[str] = mapped_column(String(2000), nullable=False, default="", comment="返回参数")
-    status: Mapped[int] = mapped_column(
+    status: Mapped[str] = mapped_column(
         CHAR(1), nullable=False, default="0", comment="操作日志状态，对照 sys_data_status（0正常 1停用 2已删除）"
     )
     error_msg: Mapped[str] = mapped_column(String(2000), nullable=False, default="", comment="错误消息")
@@ -585,9 +585,7 @@ class SysAsyncTask(SystemBase):
     create_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True, comment="创建者")
     create_time: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.current_timestamp(), comment="创建时间")
     update_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True, comment="更新者")
-    update_time: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=func.current_timestamp(), comment="更新时间"
-    )
+    update_time: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.current_timestamp(), comment="更新时间")
 
     __table_args__ = (
         Index("idx_sys_async_task_type", "task_type"),

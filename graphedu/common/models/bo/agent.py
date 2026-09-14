@@ -16,6 +16,7 @@ class InvokableConfig(TypedDict):
     user_id: int
     conv_id: int
     course_id: NotRequired[int | None]
+    graphrag_task_id: NotRequired[int | None]
 
 
 class InvokableValues(TypedDict):

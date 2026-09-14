@@ -139,6 +139,44 @@ class ChapterMapper:
         await query_db.flush()
 
     @staticmethod
+    async def get_leaf_chapters_without_embedding(course_id: int, db_session: AsyncSession) -> list[EduChapter]:
+        """获取课程下尚未生成 embedding 的叶子章节（parent_id != 0）。
+
+        仅对叶子章节生成 embedding，与检索端（章节向量召回）的语义一致；
+        根章节（parent_id == 0，通常为课程根）无需向量。
+
+        :param db_session: 数据库会话
+        :param course_id: 课程ID
+        :return: 待填充 embedding 的叶子章节列表
+        """
+        stmt = (
+            select(EduChapter)
+            .where(
+                EduChapter.course_id == course_id,
+                EduChapter.parent_id != 0,
+                EduChapter.status == SystemConstants.Status.NORMAL,
+                EduChapter.embedding.is_(None),
+            )
+            .order_by(EduChapter.chapter_no)
+        )
+        result = await db_session.execute(stmt)
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def update_embedding(chapter_id: int, embedding: list[float], db_session: AsyncSession) -> None:
+        """更新章节的向量嵌入（edu_chapter.embedding，1024 维）。
+
+        :param db_session: 数据库会话
+        :param chapter_id: 章节ID
+        :param embedding: 1024 维向量
+        :return: None
+        """
+        from sqlalchemy import update as sql_update
+
+        stmt = sql_update(EduChapter).where(EduChapter.chapter_id == chapter_id).values(embedding=embedding)
+        await db_session.execute(stmt)
+
+    @staticmethod
     async def delete_chapter(chapter_id: int, query_db: AsyncSession) -> None:
         """根据章节ID软删除章节
 

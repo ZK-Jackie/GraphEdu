@@ -199,6 +199,23 @@ class KnowledgeGraphMapper:
         await query_db.flush()
 
     @staticmethod
+    async def update_task_status(graph_id: int, task_status: str, db_session: AsyncSession) -> None:
+        """更新知识图谱异步任务状态（worker 专用，仅更新 task_status 字段）。
+
+        :param db_session: 数据库会话
+        :param graph_id: 知识图谱ID
+        :param task_status: 任务状态（pending/processing/success/failed/cancelled）
+        :return: None
+        """
+        from sqlalchemy import update as sql_update
+
+        stmt = (
+            sql_update(EduKnowledgeGraph).where(EduKnowledgeGraph.graph_id == graph_id).values(task_status=task_status)
+        )
+        await db_session.execute(stmt)
+        await db_session.flush()
+
+    @staticmethod
     async def is_course_exists(course_id: int, db_session: AsyncSession) -> bool:
         """校验课程是否存在
 

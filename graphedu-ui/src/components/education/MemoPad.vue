@@ -210,7 +210,7 @@ onMounted(() => {
 }
 
 .char-count {
-  @apply text-xs text-gray-300;
+  @apply text-xs text-gray-400 dark:text-gray-500;
 }
 
 .memo-list {
@@ -218,7 +218,7 @@ onMounted(() => {
 }
 
 .memo-item {
-  @apply flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 transition-colors;
+  @apply flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50;
 }
 
 .memo-item--completed {
@@ -226,14 +226,14 @@ onMounted(() => {
 }
 
 .memo-content {
-  @apply flex-1 text-sm text-gray-700 break-all;
+  @apply flex-1 text-sm text-gray-700 dark:text-gray-200 break-all;
 }
 
 .memo-item--completed .memo-content {
-  @apply line-through text-gray-400;
+  @apply line-through text-gray-400 dark:text-gray-500;
 }
 
 .memo-time {
-  @apply text-xs text-gray-300 whitespace-nowrap hidden sm:inline;
+  @apply text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap hidden sm:inline;
 }
 </style>

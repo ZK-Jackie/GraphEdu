@@ -32,9 +32,29 @@ CREATE TABLE IF NOT EXISTS public.edu_exercise_knowledge_point
 
 CREATE INDEX IF NOT EXISTS idx_ekp_exercise ON public.edu_exercise_knowledge_point (exercise_id);
 CREATE INDEX IF NOT EXISTS idx_ekp_node ON public.edu_exercise_knowledge_point (node_uuid);
-COMMENT ON COLUMN public.edu_exercise_knowledge_point.exercise_id IS '习题 ID，关联 edu_exercise.exercise_id，表示该习题与哪些知识点相关。';
+COMMENT ON COLUMN public.edu_exercise_knowledge_point.exercise_id IS '习题 ID，关联 edu_course_exercise.exercise_id，表示该习题与哪些知识点相关。';
 COMMENT ON COLUMN public.edu_exercise_knowledge_point.node_uuid IS '知识点业务 UUID，关联 AGE 图谱中 KnowledgePoint 节点的 n.uuid，表示该习题与哪些知识点相关。';
 COMMENT ON COLUMN public.edu_exercise_knowledge_point.relevance_score IS '相关度分数，表示习题与知识点的相关程度，取值范围 0.0000 - 1.0000，默认为 0。';
 COMMENT ON COLUMN public.edu_exercise_knowledge_point.source IS '关联来源，表示该习题与知识点关联的来源，默认为 "auto" 表示自动关联，其他可能值如 "manual" 表示人工关联。';
 COMMENT ON COLUMN public.edu_exercise_knowledge_point.create_time IS '创建时间，记录该关联关系的创建时间，默认为当前时间。';
 COMMENT ON TABLE public.edu_exercise_knowledge_point IS '习题-知识点关联表，记录习题与知识图谱知识点的多对多关系，支持按知识点检索习题。';
+
+-- 习题-知识点候选推荐表
+-- AI 推荐的候选知识点（未绑定），教师确认后写入 edu_exercise_knowledge_point。
+-- 与已确认关联分离，避免污染 query_exercise / assess 等消费逻辑（它们只读已确认关联）。
+CREATE TABLE IF NOT EXISTS public.edu_exercise_knowledge_point_suggestion
+(
+    id              BIGSERIAL PRIMARY KEY,
+    exercise_id     BIGINT NOT NULL,
+    node_uuid       UUID   NOT NULL,
+    relevance_score NUMERIC(5, 4) DEFAULT 0,
+    create_time     TIMESTAMP     DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ekps_exercise ON public.edu_exercise_knowledge_point_suggestion (exercise_id);
+CREATE INDEX IF NOT EXISTS idx_ekps_node ON public.edu_exercise_knowledge_point_suggestion (node_uuid);
+COMMENT ON COLUMN public.edu_exercise_knowledge_point_suggestion.exercise_id IS '习题 ID，关联 edu_course_exercise.exercise_id。';
+COMMENT ON COLUMN public.edu_exercise_knowledge_point_suggestion.node_uuid IS '知识点业务 UUID，关联 AGE 图谱 KnowledgePoint 节点 n.uuid。';
+COMMENT ON COLUMN public.edu_exercise_knowledge_point_suggestion.relevance_score IS '推荐相关度分数（0-1），由混合检索相似度得出。';
+COMMENT ON COLUMN public.edu_exercise_knowledge_point_suggestion.create_time IS '推荐记录创建时间。';
+COMMENT ON TABLE public.edu_exercise_knowledge_point_suggestion IS '习题-知识点候选推荐表，AI 推荐的未确认候选；教师确认后写入 edu_exercise_knowledge_point（source=manual）。';

@@ -13,9 +13,10 @@ from zoneinfo import ZoneInfo
 
 from anyio import Path
 from celery import Task
+from celery.exceptions import SoftTimeLimitExceeded, TimeLimitExceeded
 from graphrag.api import build_index as graphrag_build_index
 from graphrag.config.enums import IndexingMethod
-from graphrag_celery_callback.celery_workflow_callbacks import CeleryWorkflowCallbacks
+from graphrag_celery_callback.celery_workflow_callbacks import CeleryWorkflowCallbacks, TaskCancelledError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from graphedu.common.config.manager import get_config
@@ -49,7 +50,16 @@ async def _check_task_cancelled(graphrag_task_id: int, db: AsyncSession) -> bool
     return latest_task is not None and latest_task.task_status == "cancelled"
 
 
-@celery_app.task(bind=True, name="graphedu.workers.build_graphrag_index", max_retries=2)
+@celery_app.task(
+    bind=True,
+    name="graphedu.workers.build_graphrag_index",
+    max_retries=2,
+    # graphrag 索引构建可能持续数小时，覆盖全局 task_time_limit(3600s)。
+    # 软超时抛 SoftTimeLimitExceeded（由下方 except 捕获后标记 failed，不再重试）；
+    # 硬超时由 Celery 以 SIGKILL 终止进程。如需更长上限，调整此处即可。
+    soft_time_limit=7200,
+    time_limit=7500,
+)
 def build_graphrag_index(self: Task, graphrag_task_id: int):
     """为 EduGraphRAGTask 中的资源列表构建 GraphRAG 索引。
 
@@ -188,7 +198,7 @@ def build_graphrag_index(self: Task, graphrag_task_id: int):
         )
         method = IndexingMethod(gr_cfg.method)
         # work_id 使用系统 task_id，与 Celery backend 中的 task meta key 对齐
-        callbacks = [CeleryWorkflowCallbacks(work_id=namespace, celery_app=celery_app)]  # type: ignore[list-item]
+        callbacks = [CeleryWorkflowCallbacks(work_id=namespace, celery_app=celery_app, task=self)]  # type: ignore[list-item]
 
         logger.info(
             "开始构建索引: graphrag_task_id=%d, resources=%s, method=%s, entity_types=%s, prompt=%s",
@@ -210,6 +220,35 @@ def build_graphrag_index(self: Task, graphrag_task_id: int):
             if errors:
                 msg = f"索引构建过程中出现错误: {','.join(errors)}"
                 raise RuntimeError(msg)
+        except TaskCancelledError:
+            # 协作式取消：用户已 revoke，不重试，确保 DB 标记为 cancelled。
+            logger.info("任务被取消（协作式中断）: graphrag_task_id=%d", graphrag_task_id)
+            async with db_client.session_context() as db:
+                if not await _check_task_cancelled(graphrag_task_id, db):
+                    # callback 已检测到 revoke，但 DB 可能因竞态尚未标记，主动写入
+                    await GraphRAGTaskMapper.update_status(
+                        graphrag_task_id,
+                        db,
+                        task_status="cancelled",
+                        task_message="任务已取消",
+                        end_time=_now(),
+                    )
+            return {"status": "cancelled", "message": "任务已取消"}
+        except (SoftTimeLimitExceeded, TimeLimitExceeded) as e:
+            # 超时：长任务重试只会再次超时，标记 failed 不重试
+            msg = f"任务执行超时: {e}"
+            logger.error("任务超时: graphrag_task_id=%d, error=%s", graphrag_task_id, e)
+            async with db_client.session_context() as db:
+                if await _check_task_cancelled(graphrag_task_id, db):
+                    return {"status": "cancelled", "message": "任务已取消"}
+                await GraphRAGTaskMapper.update_status(
+                    graphrag_task_id,
+                    db,
+                    task_status="failed",
+                    task_message=msg,
+                    end_time=_now(),
+                )
+            return {"status": "failed", "message": msg}
         except Exception as e:
             msg = str(e)
             logger.error("索引构建失败: graphrag_task_id=%d, error=%s", graphrag_task_id, msg)

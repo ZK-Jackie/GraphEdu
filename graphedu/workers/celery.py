@@ -38,6 +38,8 @@ celery_app.conf.update(
         "graphedu.workers.knowledge_point_embedding_tasks",
         "graphedu.workers.knowledge_graph_tasks",
         "graphedu.workers.course_exercise_tasks",
+        "graphedu.workers.chapter_embedding_tasks",
+        "graphedu.workers.exercise_knowledge_point_tasks",
     ],
 )
 
@@ -47,6 +49,10 @@ celery_app.conf.update(
         "sync-all-pending-embeddings": {
             "task": "graphedu.workers.sync_all_pending_embeddings",
             "schedule": celery_config.beat_sync_embeddings_interval,
+        },
+        "sync-all-chapter-embeddings": {
+            "task": "graphedu.workers.sync_all_chapter_embeddings",
+            "schedule": celery_config.beat_sync_chapter_embeddings_interval,
         },
     },
 )
@@ -59,6 +65,11 @@ celery_app.conf.update(
 #     如果父进程已经初始化了数据库连接池，子进程会共享同一批 TCP 连接，
 #     导致 PostgreSQL 检测到协议异常后主动断开连接（OperationalError）。
 #     通过重置全局容器，让每个子进程在首次执行任务时创建自己的连接池。
+#
+#     当前已确认：master 主进程不执行业务任务、不在 fork 前调用 try_get_container，
+#     故 _container 在子进程 fork 时仍为 None，子进程各自 lazy 创建独立连接池，
+#     无需启用此重置。若未来在 master 启动期引入容器预热（提前调 try_get_container），
+#     则必须重新启用本钩子，否则子进程会共享父进程的数据库连接池。
 #     """
 #     from graphedu.common.resource.manager import set_container
 #

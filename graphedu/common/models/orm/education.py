@@ -770,3 +770,29 @@ class EduExerciseKnowledgePoint(EduBase):
         Index("idx_ekp_node", "node_uuid"),
         {"comment": "习题-知识点关联表"},
     )
+
+
+# ============================================================================
+# 习题-知识点候选推荐表
+# ============================================================================
+class EduExerciseKnowledgePointSuggestion(EduBase):
+    """习题-知识点候选推荐表（AI 推荐的未确认候选）。
+
+    与 edu_exercise_knowledge_point（已确认关联）分离：本表仅存 AI 推荐候选，
+    教师确认后才写入 edu_exercise_knowledge_point。消费端（query_exercise /
+    assess）只读已确认关联，不受候选影响。
+    """
+
+    __tablename__ = "edu_exercise_knowledge_point_suggestion"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True, comment="记录ID")
+    exercise_id: Mapped[int] = mapped_column(BigInteger, nullable=False, comment="习题ID（关联 edu_course_exercise）")
+    node_uuid: Mapped[UUID] = mapped_column(UUID(as_uuid=True), nullable=False, comment="知识点业务UUID")
+    relevance_score: Mapped[float] = mapped_column(Numeric(5, 4), default=0, comment="推荐相关性评分")
+    create_time: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.current_timestamp(), comment="创建时间")
+
+    __table_args__ = (
+        Index("idx_ekps_exercise", "exercise_id"),
+        Index("idx_ekps_node", "node_uuid"),
+        {"comment": "习题-知识点候选推荐表"},
+    )

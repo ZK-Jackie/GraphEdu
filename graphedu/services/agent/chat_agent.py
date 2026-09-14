@@ -143,6 +143,7 @@ class ChatAgent:
                         user_id=config["user_id"],
                         conv_id=config["conv_id"],
                         course_id=config.get("course_id"),
+                        graphrag_task_id=config.get("graphrag_task_id"),
                         **new_message.feature.model_dump(),
                     ),
                 )
@@ -273,8 +274,12 @@ class ChatAgent:
 
         # 根据 feature 条件构建工具列表
         tools = [query_exercise, set_question, generate_learning_path]
+        # visualize 读知识图谱（AGE 图），跟随前端 graphrag 开关（前端按"有知识图谱"判断）
         if runtime.context.graphrag:
-            tools.extend([visualize_graph_query, graphrag_query])
+            tools.append(visualize_graph_query)
+        # graphrag_query 读 GraphRAG 索引，需后端查到已启用的 graphrag_task_id
+        if runtime.context.graphrag_task_id:
+            tools.append(graphrag_query)
 
         # 调用 LLM（绑定工具）
         llm_with_tools = llm.bind_tools(tools)
@@ -394,7 +399,7 @@ class ChatAgent:
         # 动态上下文
         if context.chapter_id:
             parts.extend(["", "## 当前会话上下文", f"当前关联章节 ID: {context.chapter_id}"])
-        if context.graphrag:
+        if context.graphrag_task_id:
             parts.append("知识问答功能：已启用（可直接使用 teaching_document_retrieval 工具）")
 
         return "\n".join(parts)

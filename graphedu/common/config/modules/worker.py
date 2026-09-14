@@ -27,6 +27,7 @@ class CeleryConfig(BaseModel):
     redis_socket_connect_timeout: int = Field(default=10, description="Redis 连接超时（秒）")
     redis_socket_keepalive: bool = Field(default=True, description="是否启用 Redis Keepalive")
     beat_sync_embeddings_interval: int = Field(default=3600, description="嵌入同步间隔（秒）")
+    beat_sync_chapter_embeddings_interval: int = Field(default=3600, description="章节嵌入同步间隔（秒）")
 
 
 class MinerUConfig(BaseModel):

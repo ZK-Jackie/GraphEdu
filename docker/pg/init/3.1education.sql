@@ -94,7 +94,7 @@ COMMENT ON COLUMN public.edu_teacher.teacher_id IS '教师ID（关联user_id）'
 COMMENT ON COLUMN public.edu_teacher.real_name IS '真实姓名';
 COMMENT ON COLUMN public.edu_teacher.teacher_no IS '工号';
 COMMENT ON COLUMN public.edu_teacher.faculty IS '所属学院';
-COMMENT ON COLUMN public.edu_teacher.title IS '职称，对照 public.edu_professional_title（011教授 012副教授 013讲师等）';
+COMMENT ON COLUMN public.edu_teacher.title IS '职称名称（如：教授/副教授/讲师/助教），可选对照 edu_professional_title 字典码';
 COMMENT ON COLUMN public.edu_teacher.research_direction IS '研究方向';
 COMMENT ON COLUMN public.edu_teacher.max_student_count IS '最大带教学生数';
 COMMENT ON COLUMN public.edu_teacher.current_student_count IS '当前学生数';
@@ -227,7 +227,7 @@ CREATE TABLE public.edu_resource
     file_id       BIGINT,
     resource_url  VARCHAR(512),
     resource_data JSONB,
-    text_file_id  INTEGER,
+    text_file_id  BIGINT,
     parse_status  CHAR(1)               DEFAULT '0',
     display_order INTEGER      NOT NULL DEFAULT 0,
     description   VARCHAR(2048),
@@ -523,7 +523,7 @@ CREATE TABLE public.edu_course_resource
     resource_url       VARCHAR(512),
     resource_text      TEXT,
     resource_data      JSONB,
-    text_file_id       INTEGER,
+    text_file_id       BIGINT,
     parse_status       CHAR(1)               DEFAULT '0',
     display_order      INTEGER      NOT NULL DEFAULT 0,
     is_visible         CHAR(1)               DEFAULT 'Y',

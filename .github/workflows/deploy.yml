@@ -24,61 +24,173 @@ on:
       - 'example.config.yaml'
       - 'LICENSE*'
 
+# GHCR 推送需要 packages: write；GITHUB_TOKEN 自动可用，无需额外 secret
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
   group: production-deploy
   cancel-in-progress: false
 
 jobs:
-  build-frontend:
-    name: Build Frontend
+  # ========================================
+  # 1. 检测变更范围，决定构建/部署哪些部分
+  # ========================================
+  detect-changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
-    environment: production
-    # https://docs.github.com/zh/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_iddefaults
-    defaults: # 本次 job run 的 working-directory
-      run:
-        working-directory: ./graphedu-ui
-
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      postgres: ${{ steps.filter.outputs.postgres }}
+      config: ${{ steps.filter.outputs.config }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v6
+      - name: Filter changed paths
+        uses: dorny/paths-filter@v3
+        id: filter
         with:
-          version: 10
+          filters: |
+            frontend:
+              - 'graphedu-ui/**'
+              - 'docker/frontend/Dockerfile'
+              - 'docker/frontend/nginx.conf'
+              - 'docker/frontend/mime.types'
+            backend:
+              - 'graphedu/**'
+              - 'libs/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - 'docker/backend/Dockerfile'
+            postgres:
+              - 'docker/pg/**'
+            config:
+              - 'docker/docker-compose.yaml'
+              - 'docker/deploy.sh'
+              - 'docker/generate-env.py'
+              - 'docker/moddleware.docker-compose.yaml'
+              - 'prod.config.yaml'
 
-      - name: Use Node.js 24
-        uses: actions/setup-node@v4
+  # ========================================
+  # 2. 构建并推送镜像到 GHCR（仅变更的部分）
+  # ========================================
+  build-backend:
+    name: Build & Push Backend Image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.config == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          node-version: 24
-          node-version-file: ./graphedu-ui/package.json
-          cache-dependency-path: ./graphedu-ui/pnpm-lock.yaml
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm run build-only
-
-      - uses: actions/upload-artifact@v4
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          name: frontend-dist
-          path: ./graphedu-ui/dist/
-          retention-days: 1
+          images: ghcr.io/zk-jackie/graphedu-backend
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            APT_MIRROR=${{ vars.APT_MIRROR }}
+            UV_INDEX_URL=${{ vars.UV_INDEX_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
+  build-frontend:
+    name: Build & Push Frontend Image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.config == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/zk-jackie/graphedu-frontend
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            NPM_REGISTRY=${{ vars.NPM_REGISTRY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-postgres:
+    name: Build & Push Postgres Image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.postgres == 'true' || needs.detect-changes.outputs.config == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/zk-jackie/graphedu-postgres
+          tags: |
+            type=raw,value=${{ vars.POSTGRES_VERSION || '18.3.0' }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/pg/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            APT_MIRROR=${{ vars.APT_MIRROR }}
+            GITHUB_PROXY=${{ vars.GITHUB_PROXY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ========================================
+  # 3. 部署到生产服务器（仅部署变更的部分）
+  #    - config 变更 → 全量 (all)
+  #    - 否则 → 前端、后端各自按需（同一次提交两端都变则分别部署）
+  #    - 仅 postgres 变更不触发部署（数据卷敏感，需手动重启）
+  # ========================================
   deploy:
     name: Deploy to Production
-    needs: build-frontend
+    needs: [detect-changes, build-backend, build-frontend, build-postgres]
+    if: always() && !cancelled() && !failure() && (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.config == 'true')
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: graphedu-ui/dist/
-
-      - name: check dist
-        run: ls -la graphedu-ui/dist/
-
       - name: Verify Required Secrets
         run: |
           MISSING=0
@@ -90,39 +202,18 @@ jobs:
             echo "::error::Missing secret: SERVER_USERNAME"
             MISSING=$((MISSING+1))
           fi
+          if [ -z "${{ secrets.SERVER_PASSWORD }}" ]; then
+            echo "::error::Missing secret: SERVER_PASSWORD"
+            MISSING=$((MISSING+1))
+          fi
           if [ -z "${{ secrets.SERVER_DEPLOYMENT_PATH }}" ]; then
             echo "::error::Missing secret: SERVER_DEPLOYMENT_PATH"
             MISSING=$((MISSING+1))
           fi
           if [ $MISSING -gt 0 ]; then exit 1; fi
 
-      - name: Pack dist
-        run: tar -czf dist.tar.gz -C graphedu-ui/dist .
-
-      # https://github.com/marketplace/actions/scp-files
-      - name: Copy archive to server
-        uses: appleboy/scp-action@v1
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          source: "dist.tar.gz"
-          target: ${{ secrets.SERVER_DEPLOYMENT_PATH }}
-
-      - name: Extract dist on server
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script: |
-            DEPLOY_PATH="${{ secrets.SERVER_DEPLOYMENT_PATH }}"
-            rm -rf "$DEPLOY_PATH/graphedu-ui/dist"
-            mkdir -p "$DEPLOY_PATH/graphedu-ui/dist"
-            tar -xzf "$DEPLOY_PATH/dist.tar.gz" -C "$DEPLOY_PATH/graphedu-ui/dist"
-            rm "$DEPLOY_PATH/dist.tar.gz"
-
-      - name: Deploy via SSH
+      - name: Deploy all (config changed)
+        if: needs.detect-changes.outputs.config == 'true'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -132,4 +223,30 @@ jobs:
           script: |
             DEPLOY_PATH="${{ secrets.SERVER_DEPLOYMENT_PATH }}"
             cd "$DEPLOY_PATH"
-            bash docker/deploy.sh -v
+            bash docker/deploy.sh --target all -v
+
+      - name: Deploy frontend
+        if: needs.detect-changes.outputs.config != 'true' && needs.detect-changes.outputs.frontend == 'true'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          command_timeout: 20m
+          script: |
+            DEPLOY_PATH="${{ secrets.SERVER_DEPLOYMENT_PATH }}"
+            cd "$DEPLOY_PATH"
+            bash docker/deploy.sh --target frontend -v
+
+      - name: Deploy backend
+        if: needs.detect-changes.outputs.config != 'true' && needs.detect-changes.outputs.backend == 'true'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          command_timeout: 20m
+          script: |
+            DEPLOY_PATH="${{ secrets.SERVER_DEPLOYMENT_PATH }}"
+            cd "$DEPLOY_PATH"
+            bash docker/deploy.sh --target backend -v

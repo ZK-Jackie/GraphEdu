@@ -3,6 +3,7 @@
 from datetime import datetime
 import logging
 from typing import Any, Literal
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,6 +44,7 @@ from graphedu.common.models.vo.educationv2.course_exercise import (
     CourseExerciseGenerateProgressVO,
     CourseExerciseGenerateTaskVO,
     CourseExerciseListVO,
+    ExerciseKnowledgePointVO,
 )
 from graphedu.common.resource import AioS3Client, AsyncHttpClient
 from graphedu.mapper.education.chapter_resource import ChapterResourceMapper
@@ -553,6 +555,121 @@ class CourseExerciseService:
         )
 
     @staticmethod
+    async def cancel_generate_task(task_id: str) -> CourseExerciseGenerateTaskVO:
+        """取消 AI 出题异步任务。
+
+        本任务无独立任务表，取消状态由 Celery revoke + 任务内协作取消
+        （raise_if_cancelled）共同维持。
+
+        Args:
+            task_id: Celery 任务 ID
+
+        Returns:
+            任务取消结果
+        """
+        from graphedu.workers.runtime import cancel_celery_task
+
+        async def mark_cancelled():
+            # 无独立任务表，无需持久化；状态由 Celery backend 维持
+            pass
+
+        await cancel_celery_task(task_id, mark_cancelled)
+        logger.info("取消 AI 出题任务: task_id=%s", task_id)
+        return CourseExerciseGenerateTaskVO(task_id=task_id, task_status="cancelled", message="任务已取消")
+
+    @staticmethod
+    async def get_knowledge_points(exercise_id: int, query_db: AsyncSession) -> list[ExerciseKnowledgePointVO]:
+        """获取题目的知识点关联（已绑定 + 候选推荐，附知识点标题）。
+
+        Args:
+            exercise_id: 习题ID
+            query_db: 数据库会话
+
+        Returns:
+            已绑定（is_suggested=False）与候选（is_suggested=True）的并集。
+        """
+        from sqlalchemy import select
+
+        from graphedu.common.models.orm.education import EduKnowledgePointEmbedding
+        from graphedu.mapper.education.exercise_knowledge_point import ExerciseKnowledgePointMapper
+        from graphedu.mapper.education.exercise_knowledge_point_suggestion import (
+            ExerciseKnowledgePointSuggestionMapper,
+        )
+
+        bound = await ExerciseKnowledgePointMapper.get_by_exercise_id(exercise_id, query_db)
+        suggested = await ExerciseKnowledgePointSuggestionMapper.get_by_exercise_id(exercise_id, query_db)
+
+        # 批量查知识点标题（embedding 表冗余存储 title，避免联查 AGE）
+        all_uuids = {b.node_uuid for b in bound} | {s.node_uuid for s in suggested}
+        title_map: dict[UUID, str] = {}
+        if all_uuids:
+            stmt = select(EduKnowledgePointEmbedding.node_uuid, EduKnowledgePointEmbedding.title).where(
+                EduKnowledgePointEmbedding.node_uuid.in_(all_uuids)
+            )
+            for uuid_obj, title in (await query_db.execute(stmt)).all():
+                title_map[uuid_obj] = title
+
+        result: list[ExerciseKnowledgePointVO] = []
+        for b in bound:
+            result.append(
+                ExerciseKnowledgePointVO(
+                    node_uuid=b.node_uuid,
+                    title=title_map.get(b.node_uuid),
+                    relevance_score=float(b.relevance_score),
+                    is_suggested=False,
+                )
+            )
+        for s in suggested:
+            result.append(
+                ExerciseKnowledgePointVO(
+                    node_uuid=s.node_uuid,
+                    title=title_map.get(s.node_uuid),
+                    relevance_score=float(s.relevance_score),
+                    is_suggested=True,
+                )
+            )
+        return result
+
+    @staticmethod
+    async def bind_knowledge_point(
+        exercise_id: int,
+        node_uuid: UUID,
+        query_db: AsyncSession,
+        relevance_score: float = 0,
+    ) -> None:
+        """教师手动绑定知识点到题目（写已确认关联 source=manual，并清理对应候选）。
+
+        Args:
+            exercise_id: 习题ID
+            node_uuid: 知识点业务 UUID
+            query_db: 数据库会话
+            relevance_score: 相关度评分（0-1，可选）
+        """
+        from graphedu.mapper.education.exercise_knowledge_point import ExerciseKnowledgePointMapper
+        from graphedu.mapper.education.exercise_knowledge_point_suggestion import (
+            ExerciseKnowledgePointSuggestionMapper,
+        )
+
+        await ExerciseKnowledgePointMapper.create_association(
+            exercise_id, node_uuid, query_db, source="manual", relevance_score=relevance_score
+        )
+        # 绑定后清理该候选（若存在）
+        await ExerciseKnowledgePointSuggestionMapper.delete_by_exercise_and_node(exercise_id, node_uuid, query_db)
+
+    @staticmethod
+    async def unbind_knowledge_point(exercise_id: int, node_uuid: UUID, query_db: AsyncSession) -> None:
+        """教师解绑题目的知识点。
+
+        Args:
+            exercise_id: 习题ID
+            node_uuid: 知识点业务 UUID
+            query_db: 数据库会话
+        """
+        from graphedu.mapper.education.exercise_knowledge_point import ExerciseKnowledgePointMapper
+
+        await ExerciseKnowledgePointMapper.delete_by_exercise_and_node(exercise_id, node_uuid, query_db)
+
+    @staticmethod
     async def get_generate_progress(task_id: str) -> CourseExerciseGenerateProgressVO:
         """查询异步生成任务进度。
 
@@ -575,6 +692,16 @@ class CourseExerciseService:
 
         if status == "success" and celery_task.result:
             result = celery_task.result if isinstance(celery_task.result, dict) else {}
+            # 协作取消时任务正常返回 {"status": "cancelled"}（Celery state 仍为 SUCCESS），
+            # 此处透传为 cancelled，避免被误判为成功。
+            if result.get("status") == "cancelled":
+                return CourseExerciseGenerateProgressVO(
+                    task_id=task_id,
+                    task_status="cancelled",
+                    progress_percent=meta.get("percent", 0),
+                    generated_count=0,
+                    message=result.get("message") or "任务已取消",
+                )
             generated_count = result.get("generated_count", 0)
         elif status == "failed":
             # Celery FAILURE 时 info 是异常对象

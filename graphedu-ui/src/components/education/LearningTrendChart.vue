@@ -126,13 +126,20 @@ function handleResize() {
   chartInstance?.resize()
 }
 
-watch(option, async () => {
-  await nextTick()
-  ensureChart()
-})
+watch(
+  option,
+  async () => {
+    await nextTick()
+    ensureChart()
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  // 兜底：本组件处于父级 v-if 条件块内，挂载时 dailyActive 往往已有值，
+  // immediate watch 已处理；此处再强制初始化一次，规避容器尺寸未定/时序问题。
+  ensureChart()
 })
 
 onBeforeUnmount(() => {

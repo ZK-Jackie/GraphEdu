@@ -12,11 +12,24 @@ from graphrag.logger.progress import Progress
 logger = logging.getLogger(__name__)
 
 
+class TaskCancelledError(Exception):
+    """任务被取消时由回调抛出，用于在 graphrag 工作流内部协作式中断。
+
+    当用户取消任务（Celery revoke）后，回调在每个 workflow / progress 节点
+    检测到撤销状态即抛出此异常，使 graphrag 尽快停止，而不必依赖 SIGTERM
+    在长耗时计算段中的不确定中断时机。
+    """
+
+
 class CeleryWorkflowCallbacks(NoopWorkflowCallbacks):
     """Celery workflow callbacks for handling task success and failure.
 
     每隔 ``throttle_seconds`` 秒向 Celery backend 写一次进度；
     关键节点（workflow 开始/结束、pipeline 错误/完成）强制立即上报。
+
+    若传入 ``task``（Celery Task 实例），会在每个回调节点检查任务是否被
+    撤销（``task.request.is_revoked()``），命中则抛出 :class:`TaskCancelledError`
+    以协作式中断长耗时工作流。
     """
 
     _work_id: str
@@ -28,17 +41,20 @@ class CeleryWorkflowCallbacks(NoopWorkflowCallbacks):
     _completed_count: int
     _current_progress: Progress | None
     _last_report_time: float
+    _task: object | None
 
     def __init__(
         self,
         work_id: str,
         celery_app: Celery,
         throttle_seconds: float = 5.0,
+        task: object | None = None,
     ) -> None:
         self._work_id = work_id
         self._celery_app = celery_app
         self._throttle_seconds = throttle_seconds
         self._executor = ThreadPoolExecutor(max_workers=1)
+        self._task = task
 
         # 运行时状态
         self._workflow_names = []
@@ -46,6 +62,29 @@ class CeleryWorkflowCallbacks(NoopWorkflowCallbacks):
         self._completed_count = 0
         self._current_progress = None
         self._last_report_time = 0.0
+
+    def _check_cancelled(self) -> None:
+        """检查任务是否已被撤销，若已撤销则抛出 TaskCancelledError。
+
+        依赖 Celery 原生的 revoke 状态（``request.is_revoked()``）：用户调用
+        ``celery_app.control.revoke(..., terminate=True)`` 后，worker 会将该
+        task_id 写入内存 revoked 集合。本检查为纯内存查询，开销极低，可在
+        高频的 progress 回调中安全调用。
+        """
+        if self._task is None:
+            return
+        try:
+            if self._task.request.is_revoked():
+                raise TaskCancelledError(f"任务已被取消: work_id={self._work_id}")
+        except TaskCancelledError:
+            raise
+        except Exception:
+            # is_revoked 检查本身异常不应阻断正常工作流，仅记录告警
+            logger.warning(
+                "[CeleryWorkflowCallbacks] 检查取消状态失败: work_id=%s",
+                self._work_id,
+                exc_info=True,
+            )
 
     # ------------------------------------------------------------------
     # 内部辅助
@@ -110,6 +149,7 @@ class CeleryWorkflowCallbacks(NoopWorkflowCallbacks):
 
     def pipeline_start(self, names: list[str]) -> None:
         """整个 pipeline 开始。"""
+        self._check_cancelled()
         self._workflow_names = list(names)
         self._completed_count = 0
         self._current_workflow = None
@@ -133,6 +173,7 @@ class CeleryWorkflowCallbacks(NoopWorkflowCallbacks):
 
     def workflow_start(self, name: str, instance: object) -> None:
         """单个 workflow 步骤开始。"""
+        self._check_cancelled()
         self._current_workflow = name
         self._current_progress = None
         logger.info("[GraphRAG] Workflow 开始: %s", name)
@@ -140,6 +181,7 @@ class CeleryWorkflowCallbacks(NoopWorkflowCallbacks):
 
     def workflow_end(self, name: str, instance: object) -> None:
         """单个 workflow 步骤结束。"""
+        self._check_cancelled()
         self._completed_count += 1
         self._current_progress = None
         logger.info("[GraphRAG] Workflow 完成: %s (%d/%d)", name, self._completed_count, len(self._workflow_names))
@@ -160,5 +202,6 @@ class CeleryWorkflowCallbacks(NoopWorkflowCallbacks):
 
     def progress(self, progress: Progress) -> None:
         """Workflow 内的细粒度进度（高频回调，启用节流）。"""
+        self._check_cancelled()
         self._current_progress = progress
         self._schedule_report("PROGRESS", force=False)

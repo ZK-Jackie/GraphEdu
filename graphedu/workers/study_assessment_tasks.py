@@ -9,7 +9,6 @@ import logging
 import sys
 from uuid import UUID
 
-from celery import Task
 from sqlalchemy import select
 
 from graphedu.common.models.orm.education import EduExerciseAttempt, EduExerciseKnowledgePoint
@@ -30,9 +29,8 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-@celery_app.task(bind=True, name="graphedu.workers.assess_session_task", max_retries=1)
+@celery_app.task(name="graphedu.workers.assess_session_task")
 def assess_session_task(
-    self: Task,
     conv_id: int,
     user_id: int,
     *,
@@ -42,7 +40,6 @@ def assess_session_task(
     """异步评估会话中学生对各知识点的掌握程度。
 
     Args:
-        self: Celery 任务实例
         conv_id: 会话 ID
         user_id: 用户 ID
         trigger_type: 触发类型（chat_round / quiz_complete / manual 等）
@@ -390,7 +387,7 @@ async def _collect_candidates_from_events(
             }
         if event.event_type == "question" and event.event_content:
             candidate_map[uuid_str]["questions"].append(event.event_content)
-        elif event.event_type not in ("question", "quiz_answer", "resource_complete", "resource_progress"):
+        elif event.event_type not in ("question", "resource_complete", "resource_progress"):
             candidate_map[uuid_str]["other_events"].append(
                 f"内容: {event.event_content}" if event.event_content else event.event_type
             )
@@ -506,9 +503,7 @@ async def _supplement_exercise_data(
             uuid_str = str(node_uuid)
             if uuid_str in candidate_map:
                 status = "正确" if is_correct else ("错误" if is_correct is False else "待批改")
-                candidate_map[uuid_str].setdefault("exercises", []).append(
-                    f"结果: {status}, 用时: {time_spent or 0}秒"
-                )
+                candidate_map[uuid_str].setdefault("exercises", []).append(f"结果: {status}, 用时: {time_spent or 0}秒")
     except Exception:
         logger.exception("补充做题数据失败")
 

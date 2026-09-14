@@ -30,6 +30,7 @@ from graphedu.mapper.education.course_exercise import CourseExerciseMapper
 from graphedu.services.external.dify import DifyService
 from graphedu.services.system.upload import UploadService
 from graphedu.workers.celery import celery_app
+from graphedu.workers.runtime import TaskCancelledError, raise_if_cancelled
 
 # 资源类型 → Dify 文件类型映射
 _RESOURCE_TYPE_TO_DIFY: dict[str, Literal["document", "image", "audio", "video", "custom"]] = {
@@ -74,9 +75,16 @@ def _convert_generate_response_to_question_content(
     name="graphedu.workers.generate_course_exercises",
     max_retries=1,
     track_started=True,
+    # AI 批量出题依赖 Dify workflow，通常数分钟级；超时由 Celery 记 FAILURE（不再误报成功）。
+    soft_time_limit=1800,
+    time_limit=2100,
 )
 def generate_course_exercises(self: Task, dto_data: dict, user_id: int | None) -> dict[str, Any]:
     """Celery 异步任务：AI 批量生成课程练习。
+
+    失败时抛出异常（Celery 记录 FAILURE），而非返回 ``{"status":"failed"}``，
+    避免被前端误判为成功。支持协作式取消（``raise_if_cancelled``），取消时正常
+    返回 ``{"status": "cancelled"}``，由进度查询透传为 cancelled 状态。
 
     Args:
         self: Celery 任务实例
@@ -84,7 +92,7 @@ def generate_course_exercises(self: Task, dto_data: dict, user_id: int | None) -
         user_id: 当前用户 ID
 
     Returns:
-        生成结果摘要
+        生成结果摘要；取消时返回 ``{"status": "cancelled"}``。
     """
 
     async def _process():
@@ -100,7 +108,7 @@ def generate_course_exercises(self: Task, dto_data: dict, user_id: int | None) -
         async with db_client.session_context() as db:
             course = await CourseMapper.get_by_id(dto.course_id, db)
             if not course:
-                return {"status": "error", "message": f"课程 {dto.course_id} 不存在"}
+                raise RuntimeError(f"课程 {dto.course_id} 不存在")
 
         # ── 2. resource_id → file_id → OSS URL ────────────────────────────
         self.update_state(
@@ -135,7 +143,8 @@ def generate_course_exercises(self: Task, dto_data: dict, user_id: int | None) -
                 )
             )
 
-        # ── 5. 调用 Dify workflow ──────────────────────────────────────────
+        # ── 5. 调用 Dify workflow（重量级操作，前置取消检查）────────────────
+        raise_if_cancelled(self)
         self.update_state(
             state="PROGRESS",
             meta={"step": "calling_ai", "percent": 30, "step_description": "AI 正在生成题目..."},
@@ -161,29 +170,24 @@ def generate_course_exercises(self: Task, dto_data: dict, user_id: int | None) -
                 workflow_id=workflow.id,
                 return_model=CourseExerciseWorkflowResponse,
             )
-        except HTTPTimeoutException:
-            logger.error("Dify workflow 请求超时: course_id=%s", dto.course_id, exc_info=True)
-            return {"status": "failed", "message": "AI 题目生成超时，请稍后重试或减少生成数量"}
-        except HTTPConnectionException:
-            logger.error("Dify workflow 连接失败: course_id=%s", dto.course_id, exc_info=True)
-            return {"status": "failed", "message": "AI 服务连接失败，请检查网络或联系管理员"}
-        except HTTPRequestException:
-            logger.error("Dify workflow 请求失败: course_id=%s", dto.course_id, exc_info=True)
-            return {"status": "failed", "message": "AI 服务请求失败，请稍后重试"}
-        except HTTPClientException:
-            logger.error("Dify workflow 客户端错误: course_id=%s", dto.course_id, exc_info=True)
-            return {"status": "failed", "message": "AI 服务客户端异常，请联系管理员"}
+        except HTTPTimeoutException as e:
+            raise RuntimeError("AI 题目生成超时，请稍后重试或减少生成数量") from e
+        except HTTPConnectionException as e:
+            raise RuntimeError("AI 服务连接失败，请检查网络或联系管理员") from e
+        except HTTPRequestException as e:
+            raise RuntimeError("AI 服务请求失败，请稍后重试") from e
+        except HTTPClientException as e:
+            raise RuntimeError("AI 服务客户端异常，请联系管理员") from e
 
         # ── 6. 验证响应 ────────────────────────────────────────────────────
         if not workflow_response or not workflow_response.output:
-            logger.error("Dify workflow 返回空响应: course_id=%s", dto.course_id)
-            return {"status": "failed", "message": "工作流返回空数据，请检查 Dify 配置或稍后重试"}
+            raise RuntimeError("工作流返回空数据，请检查 Dify 配置或稍后重试")
 
         if len(workflow_response.output) == 0:
-            logger.warning("Dify workflow 未生成任何题目: course_id=%s", dto.course_id)
-            return {"status": "failed", "message": "未生成任何题目，请尝试调整生成参数后重试"}
+            raise RuntimeError("未生成任何题目，请尝试调整生成参数后重试")
 
         # ── 7. 转换并持久化 ────────────────────────────────────────────────
+        raise_if_cancelled(self)
         self.update_state(
             state="PROGRESS",
             meta={"step": "saving", "percent": 80, "step_description": "保存生成的题目..."},
@@ -216,11 +220,18 @@ def generate_course_exercises(self: Task, dto_data: dict, user_id: int | None) -
                 continue
 
         if not exercises_orm:
-            logger.error("所有题目数据均无效: course_id=%s", dto.course_id)
-            return {"status": "failed", "message": "题目数据格式错误，请检查 Dify 工作流输出格式"}
+            raise RuntimeError("题目数据格式错误，请检查 Dify 工作流输出格式")
 
         async with db_client.session_context() as db:
             await CourseExerciseMapper.batch_add_course_exercises(exercises_orm, db)
+            # flush 已填充 exercise_id，在 session 关闭前取出（避免 detach 后访问失败）
+            exercise_ids = [e.exercise_id for e in exercises_orm]
+
+        # 题目持久化后，异步派发知识点候选推荐（仅写候选表，不绑定；教师后续确认）
+        if exercise_ids:
+            from graphedu.workers.exercise_knowledge_point_tasks import recommend_exercise_knowledge_points
+
+            recommend_exercise_knowledge_points.apply_async(args=[exercise_ids])
 
         logger.info(
             "教师端异步生成题目成功: course_id=%s, chapter_id=%s, generated=%d/%d",
@@ -231,7 +242,11 @@ def generate_course_exercises(self: Task, dto_data: dict, user_id: int | None) -
         )
         return {"status": "success", "generated_count": len(exercises_orm)}
 
-    asyncio_run_kwargs = {}
-    if sys.platform == "win32":
-        asyncio_run_kwargs = {"loop_factory": asyncio.SelectorEventLoop}
-    return asyncio.run(_process(), **asyncio_run_kwargs)
+    try:
+        asyncio_run_kwargs = {}
+        if sys.platform == "win32":
+            asyncio_run_kwargs = {"loop_factory": asyncio.SelectorEventLoop}
+        return asyncio.run(_process(), **asyncio_run_kwargs)
+    except TaskCancelledError:
+        logger.info("习题生成任务被取消（协作式中断）")
+        return {"status": "cancelled", "message": "任务已取消"}

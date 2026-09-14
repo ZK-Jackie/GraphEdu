@@ -58,17 +58,14 @@ def reduce_gm_messages(left: "ChatMessagesLike", right: "ChatMessagesLike") -> l
     Returns:
         list: 合并并去重后的消息列表
     """
-    # coerce to list
-    if isinstance(left, list):
-        left = left[0]
+    # coerce to list：单个消息对象包装为列表，None 与空列表安全处理。
+    # 注意：不能对 list 取 [0]——空列表会抛 IndexError，多元素列表会丢弃后续消息。
     if not isinstance(left, list):
-        left = [left]
-    if isinstance(right, list):
-        right = right[0]
+        left = [left] if left is not None else []
     if not isinstance(right, list):
-        right = [right]
+        right = [right] if right is not None else []
     # merge
-    merged = left + right
+    merged = list(left) + list(right)
     # remove null values
     merged = [msg for msg in merged if msg is not None]
     # remove duplicates by message_id

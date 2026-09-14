@@ -224,25 +224,25 @@ INSERT INTO public.edu_resource (resource_id, chapter_id, resource_name, resourc
                                  is_visible, text_file_id, status, parse_status, create_by, create_time)
 VALUES
 -- CS201 第1章
-(1, 1, '第1章学习指导', 'text', 61, 1, 'Y', NULL, '0', '9', 10001, CURRENT_TIMESTAMP),
+(1, 1, '第1章学习指导', 'text', 61, 1, 'Y', NULL, '0', '2', 10001, CURRENT_TIMESTAMP),
 (2, 1, '第1章课件', 'document', 51, 2, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),
 -- CS201 第2章
-(3, 2, '第2章学习指导', 'text', 62, 1, 'Y', NULL, '0', '9', 10001, CURRENT_TIMESTAMP),
+(3, 2, '第2章学习指导', 'text', 62, 1, 'Y', NULL, '0', '2', 10001, CURRENT_TIMESTAMP),
 (4, 2, '第2章课件', 'document', 52, 2, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),
 -- CS201 第3章
-(5, 3, '第3章学习指导', 'text', 63, 1, 'Y', NULL, '0', '9', 10001, CURRENT_TIMESTAMP),
+(5, 3, '第3章学习指导', 'text', 63, 1, 'Y', NULL, '0', '2', 10001, CURRENT_TIMESTAMP),
 (6, 3, '第3章课件', 'document', 53, 2, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),
 -- CS301 第1章
-(7, 4, '第1章学习指导', 'text', 64, 1, 'Y', NULL, '0', '9', 10001, CURRENT_TIMESTAMP),
+(7, 4, '第1章学习指导', 'text', 64, 1, 'Y', NULL, '0', '2', 10001, CURRENT_TIMESTAMP),
 (8, 4, '第1章课件', 'document', 54, 2, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),
 -- CS301 第2章
-(9, 5, '第2章学习指导', 'text', 65, 1, 'Y', NULL, '0', '9', 10001, CURRENT_TIMESTAMP),
+(9, 5, '第2章学习指导', 'text', 65, 1, 'Y', NULL, '0', '2', 10001, CURRENT_TIMESTAMP),
 (10, 5, '第2章课件', 'document', 55, 2, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),
 -- CS301 第3章
-(11, 6, '第3章学习指导', 'text', 66, 1, 'Y', NULL, '0', '9', 10001, CURRENT_TIMESTAMP),
+(11, 6, '第3章学习指导', 'text', 66, 1, 'Y', NULL, '0', '2', 10001, CURRENT_TIMESTAMP),
 (12, 6, '第3章课件', 'document', 56, 2, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),
 -- CS301 第4章
-(13, 7, '第4章学习指导', 'text', 67, 1, 'Y', NULL, '0', '9', 10001, CURRENT_TIMESTAMP),
+(13, 7, '第4章学习指导', 'text', 67, 1, 'Y', NULL, '0', '2', 10001, CURRENT_TIMESTAMP),
 (14, 7, '第4章课件', 'document', 57, 2, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),
 -- CS201 新增资源（前言 + 第1-12章教材）
 (15, 1, '前言与目录（教材）', 'document', 68, 3, 'Y', NULL, '0', '0', 10001, CURRENT_TIMESTAMP),

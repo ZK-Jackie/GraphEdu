@@ -30,7 +30,7 @@ from graphedu.common.models.orm.knowledge_graph import (
 )
 from graphedu.common.models.vo.educationv2.knowledge_graph import NvlGraphDataVO
 from graphedu.common.resource.modules.database.postgresql import AsyncPostgresqlClient
-from graphedu.common.utils.uuids import uuid7_str
+from graphedu.common.utils.uuids import knowledge_point_uuid
 from graphedu.mapper.education.syllabus_graph import SyllabusGraphMapper
 from graphedu.services.education.dependency_inference import KnowledgeRelationshipBO
 from graphedu.services.education.knowledge_extraction import KnowledgePointBO
@@ -118,7 +118,7 @@ class SyllabusGraphService:
         Raises:
             KnowledgeNodeCreateFailedException: 节点创建失败。
         """
-        node_uuid = uuid7_str()
+        node_uuid = knowledge_point_uuid(course_id, title)
         try:
             point = KnowledgePoint.model_validate(
                 {

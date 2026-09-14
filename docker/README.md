@@ -110,17 +110,17 @@ docker/
 
 | 服务 | Profile | 镜像 | 端口 | 说明 |
 |------|---------|------|------|------|
-| postgres | `postgres` | `jackiey101/graphedu-postgres` | 5432（内部） | PostgreSQL 18 + pgvector + Apache AGE |
+| postgres | `postgres` | `ghcr.io/zk-jackie/graphedu-postgres` | 5432（内部） | PostgreSQL 18 + pgvector + Apache AGE |
 | redis | `redis` | `redis:8-alpine` | 6379（内部） | 缓存 + Celery broker |
-| backend | `backend` | `jackiey101/graphedu-backend` | 8000（内部） | FastAPI 应用 |
-| worker | `worker` | `jackiey101/graphedu-backend`（共享镜像） | - | Celery Worker |
-| beat | `beat` | `jackiey101/graphedu-backend`（共享镜像） | - | Celery Beat 定时调度 |
-| frontend | `frontend` | `jackiey101/graphedu-frontend` | 11334→80（宿主机） | Nginx 网关 |
-| env-generator | `env-gen` | `jackiey101/graphedu-backend`（共享镜像） | - | 一次性生成 `.env`（运行后自动退出） |
+| backend | `backend` | `ghcr.io/zk-jackie/graphedu-backend` | 8000（内部） | FastAPI 应用 |
+| worker | `worker` | `ghcr.io/zk-jackie/graphedu-backend`（共享镜像） | - | Celery Worker |
+| beat | `beat` | `ghcr.io/zk-jackie/graphedu-backend`（共享镜像） | - | Celery Beat 定时调度 |
+| frontend | `frontend` | `ghcr.io/zk-jackie/graphedu-frontend` | 11334→80（宿主机） | Nginx 网关 |
+| env-generator | `env-gen` | `astral/uv:python3.13-trixie-slim` | - | 一次性生成 `.env`（运行后自动退出） |
 
 **补充说明**：
 
-- `backend`、`worker`、`beat`、`env-generator` 共用 `docker/backend/Dockerfile` 构建的同一镜像，通过不同 `command` 区分
+- `backend`、`worker`、`beat` 共用 `docker/backend/Dockerfile` 构建的同一镜像，通过不同 `command` 区分
 - 三个应用服务均以只读方式挂载 `../prod.config.yaml`
 - `depends_on` 使用 `required: false`，即使 postgres/redis 不在 Compose 中（使用外部数据库时），应用服务仍可正常启动
 - 所有服务配置了 `restart: unless-stopped` 和健康检查
